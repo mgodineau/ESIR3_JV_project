@@ -1,0 +1,3 @@
+[submodule "VoxReader"]
+	path = VoxReader
+	url = https://github.com/sandrofigo/VoxReader.git
