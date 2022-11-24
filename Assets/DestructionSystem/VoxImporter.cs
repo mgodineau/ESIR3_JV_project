@@ -17,9 +17,13 @@ public class VoxImporter : ScriptedImporter
 		MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
 		MeshRenderer meshRenderer = gameObject.AddComponent<MeshRenderer>();
 		VoxBehaviour behaviour = gameObject.AddComponent<VoxBehaviour>();
-
+		Material material = new Material( Shader.Find("Diffuse") );
+		
+		
 		ctx.AddObjectToAsset("root", gameObject);
 		ctx.SetMainObject(gameObject);
+		
+		ctx.AddObjectToAsset("material", material);
 		
 		foreach( Model rawModel in file.Models) {
 			
@@ -42,13 +46,14 @@ public class VoxImporter : ScriptedImporter
 			meshFilter.mesh = mesh;
 		}
 		
+		meshRenderer.material = material;
 		
 	}
 	
 	
 	
 	private UnityEngine.Vector3 ConvertVector3( VoxReader.Vector3 vec) {
-		return new UnityEngine.Vector3( vec.X, vec.Y, vec.Z );
+		return new UnityEngine.Vector3( vec.X, vec.Z, vec.Y );
 	}
 	
 }

@@ -6,79 +6,106 @@ using UnityEngine;
 [RequireComponent(typeof(MeshRenderer))]
 public class VoxBehaviour : MonoBehaviour
 {
-    
-    
-    private VoxModel _model;
-    /*public VoxModel Model {
-        get {return _model;}
-        set {
-            _model = value;
-            MeshComponent.mesh = CreateMeshFromModel(_model);
-            // MeshComponent.mesh = new Mesh();
-        }
-    }*/
-    
-    
-    private MeshFilter _meshComponent;
-    public MeshFilter MeshComponent {
-        get {
-            if( _meshComponent == null ) {
-                _meshComponent = GetComponent<MeshFilter>();
-            }
-            return _meshComponent;
-        }
-    }
-    
-    
-    public Mesh CreateMeshFromModel( VoxModel model ) {
-        
-        Mesh mesh = new Mesh();
-        
-        LinkedList<VoxModel.Voxel> voxels = model.GetVoxels();
-        //IEnumerable<VoxModel.Voxel> filteredVoxels = System.Linq.Enumerable.Where<VoxModel.Voxel>(voxels, (VoxModel.Voxel voxel ) => voxel.value != 0);
-        
-        
-        List<Vector3> vertices = new List<Vector3>();
-        List<int> triangles = new List<int>();
-        
-        foreach(VoxModel.Voxel voxel in voxels) {
-            if( voxel.depth != 0 ) {
-                //continue;
-            }
+	
+	
+	private VoxModel _model;
+	
+	
+	private MeshFilter _meshComponent;
+	public MeshFilter MeshComponent {
+		get {
+			if( _meshComponent == null ) {
+				_meshComponent = GetComponent<MeshFilter>();
+			}
+			return _meshComponent;
+		}
+	}
+	
+	
+	public Mesh CreateMeshFromModel( VoxModel model ) {
+		
+		Mesh mesh = new Mesh();
+		mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+		
+		LinkedList<VoxModel.Voxel> voxels = model.GetVoxels();
+		//IEnumerable<VoxModel.Voxel> filteredVoxels = System.Linq.Enumerable.Where<VoxModel.Voxel>(voxels, (VoxModel.Voxel voxel ) => voxel.value != 0);
+		
+		
+		List<Vector3> vertices = new List<Vector3>();
+		List<Vector3> normals = new List<Vector3>();
+		List<int> triangles = new List<int>();
+		
+		foreach(VoxModel.Voxel voxel in voxels) {
+			if( voxel.depth != 0 ) {
+				//continue;
+			}
+			CreateCubeAt( voxel.position, voxel.size, model, vertices, normals, triangles );
 
-            float halfSize = voxel.size / 2;
-            vertices.Add(new Vector3(1, 1, 0) * halfSize + voxel.position);
-            vertices.Add(new Vector3(-1, 1, 0) * halfSize + voxel.position);
-            vertices.Add(new Vector3(1, -1, 0) * halfSize + voxel.position);
-
-            triangles.Add(vertices.Count - 3);
-            triangles.Add(vertices.Count - 2);
-            triangles.Add(vertices.Count - 1);
-
-            /*
-            int[] offsets = {-1, 1};
-            for( int i=0; i<8; i++ ) {
-				int xOffset = offsets[i%2];
-				int yOffset = offsets[(i/2)%2];
-				int zOffset = offsets[(i/4)%2];
+		}
+		mesh.SetVertices(vertices);
+		mesh.SetNormals(normals);
+		mesh.SetTriangles(triangles, 0);
+		
+		return mesh;
+	}
+	
+	
+	private void CreateCubeAt( Vector3 position, float size, VoxModel model, List<Vector3> vertices, List<Vector3> normals, List<int> triangles ) {
+		
+		float halfSize = size / 2;
+		
+		List<int> triangleSequenceOffset = new List<int>{
+			3, 4, 2,
+			2, 1, 3,
+		};
+		
+		List<int> triangleSequenceOffsetReverse = new List<int>(triangleSequenceOffset);
+		triangleSequenceOffsetReverse.Reverse();
+		
+		for( int axis=0; axis<3; axis++ ) {
+			Vector3 tangent1 = Vector3.zero;
+			Vector3 tangent2 = Vector3.zero;
+			Vector3 faceDir = Vector3.zero;
+			
+			for( int dir = -1; dir<=1; dir+=2 ) {
 				
-				Vector3 nextPosition = voxel.position;
-				nextPosition += Vector3.right * xOffset * voxel.size;
-				nextPosition += Vector3.up * yOffset * voxel.size;
-				nextPosition += Vector3.forward * zOffset * voxel.size;
-				
-                if( model.Get(nextPosition) == 0 ) {
-                    // TODO build a face
-                    
+				faceDir[axis] = dir;
+
+				if( model.Get(position / size + faceDir ) != 0 )
+                {
+					continue;
                 }
-			}*/
 
-        }
-        mesh.SetVertices(vertices);
-        mesh.SetTriangles(triangles, 0);
-        
-        return mesh;
-    }
-    
-    
+				tangent1[(axis+1)%3] = 1;
+				tangent2[(axis+2)%3] = 1;
+				
+				
+				Vector3 faceCenter = position + faceDir * halfSize;
+				
+				vertices.Add(faceCenter + (tangent1 + tangent2) * halfSize );
+				vertices.Add(faceCenter + (-tangent1 + tangent2) * halfSize );
+				vertices.Add(faceCenter + (tangent1 - tangent2) * halfSize );
+				vertices.Add(faceCenter + (-tangent1 - tangent2) * halfSize );
+				
+				for(int i=0; i<4; i++) {
+					normals.Add(faceDir);
+				}
+
+
+				List<int> currentSequence = (dir == -1) ? triangleSequenceOffset : triangleSequenceOffsetReverse;
+				foreach( int offset in currentSequence) {
+					triangles.Add(vertices.Count - offset);
+				}
+
+			}
+			
+			
+			
+		}
+		
+		
+		
+	}
+	
+	
 }

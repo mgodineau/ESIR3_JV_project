@@ -23,7 +23,7 @@ public class VoxModel : ScriptableObject
 
 		float maxSize = Mathf.Max(size.x, size.y, size.z);
 		_depth = (byte)Mathf.CeilToInt( Mathf.Log(maxSize, 2) );
-		scaleFactor = 1.0f / maxSize;
+		scaleFactor = 1.0f / Mathf.Pow(2, _depth);
 
 		root = new VoxOctreeLeaf();
 	}
@@ -38,13 +38,27 @@ public class VoxModel : ScriptableObject
 	}
 	
 	public byte Get(Vector3 objectPosition) {
-		return root.Get(ObjectToNormalizedPosition(objectPosition));
+		Vector3 normalizedPosition = ObjectToNormalizedPosition(objectPosition);
+		return InUnitCube(normalizedPosition) ? root.Get(ObjectToNormalizedPosition(objectPosition)) : (byte)0;
 	}
 	
 	
 	private Vector3 ObjectToNormalizedPosition(Vector3 objectPosition) {
 		return objectPosition * scaleFactor;
 	}
+
+	private bool InUnitCube(Vector3 position)
+    {
+		for(int i=0; i<3; i++)
+        {
+			if( position[i] < 0 || position[i] > 1 )
+            {
+				return false;
+            }
+        }
+		return true;
+    }
+
 
 	internal void Set(VoxReader.Vector3 position, int v)
 	{
@@ -54,7 +68,7 @@ public class VoxModel : ScriptableObject
 	public LinkedList<Voxel> GetVoxels() {
 		
 		LinkedList<Voxel> voxels = new LinkedList<Voxel>();
-		root.FillVoxelCollection( voxels, Vector3.one * 0.5f, 1.0f / scaleFactor, Depth);
+		root.FillVoxelCollection( voxels, Vector3.one * 0.5f, 1.0f, Depth);
 		return voxels;
 	}
 
@@ -166,7 +180,7 @@ public class VoxModel : ScriptableObject
 			byte id = 0;
 			byte powerOf2 = 1;
 			for( int i=0; i<3; i++ ) {
-				if (normalizedPosition[i] > 0.5f) {
+				if (normalizedPosition[i] >= 0.5f) {
 					id += powerOf2;
 					normalizedPosition[i] -= 0.5f;
 				}
