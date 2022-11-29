@@ -8,45 +8,60 @@ public class VoxModel : ScriptableObject
 	
 	
 	private VoxOctree root;
+	
 	private byte _depth;
 	public byte Depth {
 		get {return _depth;}
-		set {
-			_depth = (byte)Mathf.Max(value, 0);
-		}
 	}
+	private float _voxelSize;
+	public float VoxelSize {
+		get {return _voxelSize;}
+	}
+	
+	
+	private Vector3 objectCenterOffset;
+	private int sizeInVoxels;
 
-	private float scaleFactor;
 
+	public VoxModel( Vector3 size, float voxelSize = 1 ) {
+		_voxelSize = voxelSize;
+		
+		sizeInVoxels = (int)Mathf.Max(size.x, size.y, size.z);
+		_depth = (byte)Mathf.CeilToInt( Mathf.Log(sizeInVoxels, 2) );
+		sizeInVoxels = (int)Mathf.Pow(2, _depth);
 
-	public VoxModel( Vector3 size, byte depth = 5 ) {
-
-		float maxSize = Mathf.Max(size.x, size.y, size.z);
-		_depth = (byte)Mathf.CeilToInt( Mathf.Log(maxSize, 2) );
-		scaleFactor = 1.0f / Mathf.Pow(2, _depth);
-
+		objectCenterOffset = size * _voxelSize * 0.5f;
+		objectCenterOffset.y = 0;
 		root = new VoxOctreeLeaf();
 	}
 	
 	
 	public void Set( Vector3 objectPosition, byte value ) {
-		if ( Depth != 0 && root is VoxOctreeLeaf )
+		if ( _depth != 0 && root is VoxOctreeLeaf )
         {
 			root = new VoxOctreeNode(root);
         }
-		root.Set(ObjectToNormalizedPosition(objectPosition), Depth, value);
+		root.Set(ObjectToNormalizedPosition(objectPosition), _depth, value);
 	}
 	
 	public byte Get(Vector3 objectPosition) {
 		Vector3 normalizedPosition = ObjectToNormalizedPosition(objectPosition);
-		return InUnitCube(normalizedPosition) ? root.Get(ObjectToNormalizedPosition(objectPosition)) : (byte)0;
+		return InUnitCube(normalizedPosition) ? root.Get(normalizedPosition) : (byte)0;
 	}
 	
+	
+	public Vector3 VoxelToObjectPosition(Vector3 voxelPosition) {
+		return voxelPosition * _voxelSize - objectCenterOffset;
+	}
 	
 	private Vector3 ObjectToNormalizedPosition(Vector3 objectPosition) {
-		return objectPosition * scaleFactor;
+		return (objectPosition + objectCenterOffset) / (sizeInVoxels * _voxelSize);
 	}
-
+	
+	private Vector3 NormalizedToObjectPosition(Vector3 normalizedPosition) {
+		return normalizedPosition * sizeInVoxels * _voxelSize - objectCenterOffset;
+	}
+	
 	private bool InUnitCube(Vector3 position)
     {
 		for(int i=0; i<3; i++)
@@ -68,7 +83,9 @@ public class VoxModel : ScriptableObject
 	public LinkedList<Voxel> GetVoxels() {
 		
 		LinkedList<Voxel> voxels = new LinkedList<Voxel>();
-		root.FillVoxelCollection( voxels, Vector3.one * 0.5f, 1.0f, Depth);
+		
+		float objectSize = sizeInVoxels * _voxelSize;
+		root.FillVoxelCollection( voxels, NormalizedToObjectPosition(Vector3.one * 0.5f), objectSize, _depth);
 		return voxels;
 	}
 
@@ -225,7 +242,7 @@ public class VoxModel : ScriptableObject
 			voxel.depth = depth;
 			voxel.value = value;
 			voxel.size = voxelSize;
-			voxel.position = objectPosition;
+			voxel.position =  objectPosition;
 			
 			voxels.Add(voxel);
 		}

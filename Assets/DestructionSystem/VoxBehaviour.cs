@@ -39,7 +39,7 @@ public class VoxBehaviour : MonoBehaviour
 			if( voxel.depth != 0 ) {
 				//continue;
 			}
-			CreateCubeAt( voxel.position, voxel.size, model, vertices, normals, triangles );
+			CreateCubeAt( voxel, model, vertices, normals, triangles );
 
 		}
 		mesh.SetVertices(vertices);
@@ -50,9 +50,9 @@ public class VoxBehaviour : MonoBehaviour
 	}
 	
 	
-	private void CreateCubeAt( Vector3 position, float size, VoxModel model, List<Vector3> vertices, List<Vector3> normals, List<int> triangles ) {
+	private void CreateCubeAt( VoxModel.Voxel voxel, VoxModel model, List<Vector3> vertices, List<Vector3> normals, List<int> triangles ) {
 		
-		float halfSize = size / 2;
+		float halfSize = voxel.size / 2;
 		
 		List<int> triangleSequenceOffset = new List<int>{
 			3, 4, 2,
@@ -71,7 +71,7 @@ public class VoxBehaviour : MonoBehaviour
 				
 				faceDir[axis] = dir;
 
-				if( model.Get(position / size + faceDir ) != 0 )
+				if( model.Get(voxel.position + faceDir * voxel.size ) != 0 )
                 {
 					continue;
                 }
@@ -80,7 +80,7 @@ public class VoxBehaviour : MonoBehaviour
 				tangent2[(axis+2)%3] = 1;
 				
 				
-				Vector3 faceCenter = position + faceDir * halfSize;
+				Vector3 faceCenter = voxel.position + faceDir * halfSize;
 				
 				vertices.Add(faceCenter + (tangent1 + tangent2) * halfSize );
 				vertices.Add(faceCenter + (-tangent1 + tangent2) * halfSize );
