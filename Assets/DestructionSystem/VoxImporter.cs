@@ -17,6 +17,7 @@ public class VoxImporter : ScriptedImporter
 	{
 		
 		VoxReader.Interfaces.IVoxFile file = VoxReader.VoxReader.Read( ctx.assetPath );
+		string filename = Path.GetFileNameWithoutExtension(ctx.assetPath);
 		
 		GameObject gameObject = new GameObject();
 		MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
@@ -26,33 +27,37 @@ public class VoxImporter : ScriptedImporter
 		VoxBehaviour behaviour = gameObject.AddComponent<VoxBehaviour>();
 		Material material = new Material( Shader.Find("Diffuse") );
 		Texture2D texture = ConvertPaletteToTexture(file.Palette);
-		texture.name = "texture";
+		texture.name = filename + "_palette";
 		
 		ctx.AddObjectToAsset("root", gameObject);
 		ctx.SetMainObject(gameObject);
 		
 		ctx.AddObjectToAsset("material", material);
-		ctx.AddObjectToAsset("texture", texture);
+		ctx.AddObjectToAsset("palette", texture);
 		
 		foreach( Model rawModel in file.Models) {
+			
 			
 			UnityEngine.Vector3 size = ConvertVector3(rawModel.Size);
 			
 			
-			VoxModel model = new VoxModel(size, voxelSize);
+			VoxModel model = ScriptableObject.CreateInstance<VoxModel>();
+			model.SetSize( ConvertVector3(rawModel.Size), voxelSize );
+			
 			foreach( Voxel voxel in rawModel.Voxels ) {
 				//model.Set( ConvertVector3(voxel.Position), (byte)voxel.Color.GetHashCode() );
 				model.Set(model.VoxelToObjectPosition(ConvertVector3(voxel.Position)), 1);
 			}
 			
+			model.name = filename + "_model_" + rawModel.Id;
+			ctx.AddObjectToAsset("model_" + rawModel.Id, model);
+			behaviour.Model = model;
 			
-			model.name = "model_" + rawModel.Id;
-			ctx.AddObjectToAsset("model", model);
-
+			
 			Mesh mesh = behaviour.CreateMeshFromModel(model);
-			mesh.name = "mesh_" + rawModel.Id;
-			ctx.AddObjectToAsset("mesh", mesh);
-
+			mesh.name = filename + "_mesh_" + rawModel.Id;
+			ctx.AddObjectToAsset("mesh_" + rawModel.Id, mesh);
+			
 			meshFilter.mesh = mesh;
 			collider.sharedMesh = meshFilter.sharedMesh;
 		}

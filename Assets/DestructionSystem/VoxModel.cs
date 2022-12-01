@@ -3,34 +3,45 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class VoxModel : ScriptableObject
+public class VoxModel : ScriptableObject, ISerializationCallbackReceiver
 {
-	
-	
 	private VoxOctree root;
+	[SerializeField] private List<SerializableVoxOctree> voxOctree_serialized;
 	
-	private byte _depth;
+	public string content = "default content";
+	
+	[SerializeField] private byte _depth;
 	public byte Depth {
 		get {return _depth;}
 	}
-	private float _voxelSize;
+	
+	[SerializeField] private float _voxelSize;
 	public float VoxelSize {
 		get {return _voxelSize;}
+		set {_voxelSize = value;}
 	}
 	
-	
+	[SerializeField]
 	private Vector3 objectCenterOffset;
+	[SerializeField]
 	private int sizeInVoxels;
 
-
-	public VoxModel( Vector3 size, float voxelSize = 1 ) {
+	public VoxModel() {
+		voxOctree_serialized = new List<SerializableVoxOctree>();
+		Debug.Log("default constructor");
+	}
+	
+	public void SetSize( Vector3 boundingBox, float voxelSize = 1 ) {
+		content = "des trucs et des machins";
+		
 		_voxelSize = voxelSize;
 		
-		sizeInVoxels = (int)Mathf.Max(size.x, size.y, size.z);
+		sizeInVoxels = (int)Mathf.Max(boundingBox.x, boundingBox.y, boundingBox.z);
 		_depth = (byte)Mathf.CeilToInt( Mathf.Log(sizeInVoxels, 2) );
+		Debug.Log("depth = " + _depth);
 		sizeInVoxels = (int)Mathf.Pow(2, _depth);
 
-		objectCenterOffset = size * _voxelSize * 0.5f;
+		objectCenterOffset = boundingBox * _voxelSize * 0.5f;
 		objectCenterOffset.y = 0;
 		root = new VoxOctreeLeaf();
 	}
@@ -73,23 +84,65 @@ public class VoxModel : ScriptableObject
         }
 		return true;
     }
-
-
-	internal void Set(VoxReader.Vector3 position, int v)
-	{
-		throw new NotImplementedException();
-	}
+	
 	
 	public LinkedList<Voxel> GetVoxels() {
 		
 		LinkedList<Voxel> voxels = new LinkedList<Voxel>();
 		
 		float objectSize = sizeInVoxels * _voxelSize;
+		Debug.Log(root);
 		root.FillVoxelCollection( voxels, NormalizedToObjectPosition(Vector3.one * 0.5f), objectSize, _depth);
 		return voxels;
 	}
 
+	public void OnBeforeSerialize()
+	{
+		voxOctree_serialized.Clear();
+		SerializeVoxOctree(root);
+	}
 
+	public void OnAfterDeserialize()
+	{
+		int nodeCount = 0;
+		root = DeserializeVoxOctree(0, out nodeCount);
+		voxOctree_serialized.Clear();
+	}
+	
+	
+	private void SerializeVoxOctree( VoxOctree tree ) {
+		bool isLeaf = tree is VoxOctreeLeaf;
+		SerializableVoxOctree serializedRoot = new SerializableVoxOctree(){isLeaf = isLeaf};
+		if(isLeaf) {
+			serializedRoot.value = ((VoxOctreeLeaf)tree).value;
+		}
+		voxOctree_serialized.Add(serializedRoot);
+		if( !isLeaf ) {
+			foreach( VoxOctree child in ((VoxOctreeNode)tree).children ) {
+				SerializeVoxOctree(child);
+			}
+		}
+		
+	}
+	
+	VoxOctree DeserializeVoxOctree( int rootId, out int nodeCount ) {
+		nodeCount = 1;
+		SerializableVoxOctree serializedRoot = voxOctree_serialized[rootId];
+		
+		if( serializedRoot.isLeaf ) {
+			return new VoxOctreeLeaf(serializedRoot.value);
+		}
+		
+		VoxOctree[] children = new VoxOctree[8];
+		for( int i=0; i<8; i++ ) {
+			int childNodeCount = 0;
+			children[i] = DeserializeVoxOctree(rootId + nodeCount, out childNodeCount);
+			nodeCount += childNodeCount;
+		}
+		return new VoxOctreeNode(children);
+	}
+	
+	
 	public struct Voxel {
 		
 		public Vector3 position;
@@ -104,9 +157,17 @@ public class VoxModel : ScriptableObject
 			this.value = value;
 		}
 	}
-
-
-	abstract class VoxOctree : ICloneable {
+	
+	
+	[Serializable]
+	struct SerializableVoxOctree {
+		public bool isLeaf;
+		public byte value;
+	}
+	
+	
+	
+	abstract class VoxOctree : UnityEngine.Object, ICloneable {
 		
 		
 		public abstract byte Get( Vector3 normalizedPosition );
@@ -117,8 +178,8 @@ public class VoxModel : ScriptableObject
 
 		public abstract object Clone();
     }
-
-
+	
+	
 	class VoxOctreeNode : VoxOctree
 	{
 		public VoxOctree[] children;
@@ -210,8 +271,8 @@ public class VoxModel : ScriptableObject
 
         
     }
-
-
+	
+	
 	class VoxOctreeLeaf : VoxOctree
 	{
 		public byte value;
@@ -252,5 +313,5 @@ public class VoxModel : ScriptableObject
 			return new VoxOctreeLeaf(value);
         }
     }
-
+	
 }

@@ -7,9 +7,14 @@ using UnityEngine;
 public class VoxBehaviour : MonoBehaviour
 {
 	
+	private static HashSet<VoxBehaviour> registeredVoxBehaviour = new HashSet<VoxBehaviour>();
 	
+	
+	[SerializeField]
 	private VoxModel _model;
-	
+	public VoxModel Model {
+		set {_model = value;}
+	}
 	
 	private MeshFilter _meshComponent;
 	public MeshFilter MeshComponent {
@@ -21,6 +26,65 @@ public class VoxBehaviour : MonoBehaviour
 		}
 	}
 	
+	
+	public void OnEnable() {
+		registeredVoxBehaviour.Add(this);
+	}
+	
+	public void OnDisable() {
+		registeredVoxBehaviour.Remove(this);
+	}
+	
+	
+	
+	
+	public static void SetSphereAt(Vector3 worldCenter, float radius, byte value = 0) {
+		foreach( VoxBehaviour behaviour in registeredVoxBehaviour ) {
+			behaviour.SetSphere(worldCenter, radius, value);
+		}
+	}
+	
+	private void SetSphere(Vector3 worldCenter, float radius, byte value = 0) {
+		Vector3 objectCenter = transform.InverseTransformPoint(worldCenter);
+		float objectRadius = radius / transform.localScale.x;
+		
+		List<Vector3> voxels = CreateSphereVoxels(objectCenter, objectRadius);
+		SetVoxelsValue(voxels, value);
+	}
+	
+	
+	private void SetVoxelsValue( List<Vector3> voxelPositions, byte value ) {
+		foreach( Vector3 voxel in voxelPositions ) {
+			_model.Set(voxel, value);
+		}
+		
+		MeshComponent.mesh = CreateMeshFromModel(_model);
+	}
+	
+	
+	private List<Vector3> CreateSphereVoxels( Vector3 center, float radius ) {
+		List<Vector3> voxels = new List<Vector3>();
+		
+		Vector3 centerSnap = center / _model.VoxelSize;
+		for( int i=0; i<3; i++ ) {
+			centerSnap[i] = Mathf.Round(centerSnap[i]);
+		}
+		centerSnap *= _model.VoxelSize;
+		
+		int sizeInVoxels = Mathf.RoundToInt(radius / _model.VoxelSize);
+		int halfSize = sizeInVoxels / 2;
+		for( int x=-halfSize; x<halfSize; x++ ) {
+			for( int y=-halfSize; y<halfSize; y++ ) {
+				for( int z=-halfSize; z<halfSize; z++ ) {
+					Vector3 offset = new Vector3(x, y, z) * _model.VoxelSize;
+					voxels.Add( centerSnap + offset );
+				}
+			}
+		}
+		
+		
+		return voxels;
+	}
 	
 	public Mesh CreateMeshFromModel( VoxModel model ) {
 		
