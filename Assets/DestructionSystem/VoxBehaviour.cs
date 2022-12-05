@@ -6,170 +6,263 @@ using UnityEngine;
 [RequireComponent(typeof(MeshRenderer))]
 public class VoxBehaviour : MonoBehaviour
 {
-	
+
 	private static HashSet<VoxBehaviour> registeredVoxBehaviour = new HashSet<VoxBehaviour>();
-	
-	
+
+
 	[SerializeField]
 	private VoxModel _model;
 	public VoxModel Model {
-		set {_model = value;}
+		set { _model = value; }
 	}
-	
-	private MeshFilter _meshComponent;
-	public MeshFilter MeshComponent {
-		get {
-			if( _meshComponent == null ) {
-				_meshComponent = GetComponent<MeshFilter>();
-			}
-			return _meshComponent;
-		}
+
+	private MeshFilter meshComponent;
+	private MeshCollider meshCollider;
+
+
+	private Queue<ModelUpdateThread> pendingModelUpdates = new Queue<ModelUpdateThread>();
+	private ModelUpdateThread runningThread = null;
+
+	private void Awake()
+	{
+		_model = (VoxModel)_model.Clone();
+		meshComponent = GetComponent<MeshFilter>();
+		meshCollider = GetComponent<MeshCollider>();
 	}
-	
-	
-	public void OnEnable() {
+
+
+    private void LateUpdate()
+    {
+        if ( runningThread != null && runningThread.IsDone ) {
+			SetMesh( runningThread.GetUpdatedMesh() );
+			runningThread = null;
+        }
+
+		if( runningThread == null && pendingModelUpdates.Count != 0 ) {
+			runningThread = pendingModelUpdates.Dequeue();
+			runningThread.Start();
+        }
+
+    }
+
+
+    private void OnEnable() {
 		registeredVoxBehaviour.Add(this);
 	}
-	
-	public void OnDisable() {
+
+	private void OnDisable() {
 		registeredVoxBehaviour.Remove(this);
 	}
-	
-	
-	
-	
+
+
+
 	public static void SetSphereAt(Vector3 worldCenter, float radius, byte value = 0) {
-		foreach( VoxBehaviour behaviour in registeredVoxBehaviour ) {
+		foreach (VoxBehaviour behaviour in registeredVoxBehaviour) {
 			behaviour.SetSphere(worldCenter, radius, value);
 		}
 	}
-	
+
 	private void SetSphere(Vector3 worldCenter, float radius, byte value = 0) {
 		Vector3 objectCenter = transform.InverseTransformPoint(worldCenter);
 		float objectRadius = radius / transform.localScale.x;
-		
+
 		List<Vector3> voxels = CreateSphereVoxels(objectCenter, objectRadius);
-		SetVoxelsValue(voxels, value);
+		ScheduleModelUpdate(voxels, value);
 	}
-	
-	
-	private void SetVoxelsValue( List<Vector3> voxelPositions, byte value ) {
-		foreach( Vector3 voxel in voxelPositions ) {
-			_model.Set(voxel, value);
+
+
+	private void SetMesh( Mesh mesh )
+    {
+		meshComponent.mesh = mesh;
+		if( meshCollider != null )
+        {
+			meshCollider.sharedMesh = mesh;
+        }
+    }
+
+
+	private void ScheduleModelUpdate(List<Vector3> voxelPositions, byte value) {
+		pendingModelUpdates.Enqueue( new ModelUpdateThread(_model, voxelPositions, value) );
+	}
+
+	private static void SetVoxelsValue(VoxModel model, List<Vector3> vertices, List<Vector3> normals, List<Vector2> uvs, List<int> triangles, List<Vector3> voxelPositions, byte value) {
+		foreach (Vector3 voxel in voxelPositions)
+		{
+			model.Set(voxel, value);
 		}
-		
-		MeshComponent.mesh = CreateMeshFromModel(_model);
+
+		LinkedList<VoxModel.Voxel> voxels = model.GetVoxels();
+		foreach( VoxModel.Voxel voxel in voxels ) {
+			CreateCubeAt(model, voxel, vertices, normals, uvs, triangles);
+        }
 	}
-	
-	
-	private List<Vector3> CreateSphereVoxels( Vector3 center, float radius ) {
+
+
+	private List<Vector3> CreateSphereVoxels(Vector3 center, float radius) {
 		List<Vector3> voxels = new List<Vector3>();
-		
+
 		Vector3 centerSnap = center / _model.VoxelSize;
-		for( int i=0; i<3; i++ ) {
+		for (int i = 0; i < 3; i++) {
 			centerSnap[i] = Mathf.Round(centerSnap[i]);
 		}
 		centerSnap *= _model.VoxelSize;
-		
-		int sizeInVoxels = Mathf.RoundToInt(radius / _model.VoxelSize);
-		int halfSize = sizeInVoxels / 2;
-		for( int x=-halfSize; x<halfSize; x++ ) {
-			for( int y=-halfSize; y<halfSize; y++ ) {
-				for( int z=-halfSize; z<halfSize; z++ ) {
+		float sqrRadius = radius * radius;
+
+		int radiusInVoxels = Mathf.RoundToInt(radius / _model.VoxelSize);
+		for (int x = -radiusInVoxels; x < radiusInVoxels; x++) {
+			for (int y = -radiusInVoxels; y < radiusInVoxels; y++) {
+				for (int z = -radiusInVoxels; z < radiusInVoxels; z++) {
 					Vector3 offset = new Vector3(x, y, z) * _model.VoxelSize;
-					voxels.Add( centerSnap + offset );
+					if (offset.sqrMagnitude <= sqrRadius)
+					{
+						voxels.Add(centerSnap + offset);
+					}
 				}
 			}
 		}
-		
-		
+
+
 		return voxels;
 	}
-	
-	public Mesh CreateMeshFromModel( VoxModel model ) {
-		
+
+
+	public Mesh CreateMeshFromModel(VoxModel model) {
+
 		Mesh mesh = new Mesh();
 		mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-		
+
 		LinkedList<VoxModel.Voxel> voxels = model.GetVoxels();
-		//IEnumerable<VoxModel.Voxel> filteredVoxels = System.Linq.Enumerable.Where<VoxModel.Voxel>(voxels, (VoxModel.Voxel voxel ) => voxel.value != 0);
-		
-		
+
+
 		List<Vector3> vertices = new List<Vector3>();
 		List<Vector3> normals = new List<Vector3>();
+		List<Vector2> uvs = new List<Vector2>();
 		List<int> triangles = new List<int>();
-		
-		foreach(VoxModel.Voxel voxel in voxels) {
-			if( voxel.depth != 0 ) {
+
+		foreach (VoxModel.Voxel voxel in voxels) {
+			if (voxel.depth != 0) {
 				//continue;
 			}
-			CreateCubeAt( voxel, model, vertices, normals, triangles );
+			CreateCubeAt(model, voxel, vertices, normals, uvs, triangles);
 
 		}
 		mesh.SetVertices(vertices);
 		mesh.SetNormals(normals);
+		mesh.SetUVs(0, uvs);
 		mesh.SetTriangles(triangles, 0);
-		
+
 		return mesh;
 	}
-	
-	
-	private void CreateCubeAt( VoxModel.Voxel voxel, VoxModel model, List<Vector3> vertices, List<Vector3> normals, List<int> triangles ) {
-		
+
+
+
+
+	private static void CreateCubeAt(VoxModel model, VoxModel.Voxel voxel, List<Vector3> vertices, List<Vector3> normals, List<Vector2> uvs, List<int> triangles) {
+
 		float halfSize = voxel.size / 2;
-		
+
 		List<int> triangleSequenceOffset = new List<int>{
 			3, 4, 2,
 			2, 1, 3,
 		};
-		
+
 		List<int> triangleSequenceOffsetReverse = new List<int>(triangleSequenceOffset);
 		triangleSequenceOffsetReverse.Reverse();
-		
-		for( int axis=0; axis<3; axis++ ) {
+
+		for (int axis = 0; axis < 3; axis++) {
 			Vector3 tangent1 = Vector3.zero;
 			Vector3 tangent2 = Vector3.zero;
 			Vector3 faceDir = Vector3.zero;
-			
-			for( int dir = -1; dir<=1; dir+=2 ) {
-				
+
+			for (int dir = -1; dir <= 1; dir += 2) {
+
 				faceDir[axis] = dir;
 
-				if( model.Get(voxel.position + faceDir * voxel.size ) != 0 )
-                {
+				if (model.Get(voxel.position + faceDir * voxel.size) != 0)
+				{
 					continue;
-                }
+				}
 
-				tangent1[(axis+1)%3] = 1;
-				tangent2[(axis+2)%3] = 1;
-				
-				
+				tangent1[(axis + 1) % 3] = 1;
+				tangent2[(axis + 2) % 3] = 1;
+
+
 				Vector3 faceCenter = voxel.position + faceDir * halfSize;
-				
-				vertices.Add(faceCenter + (tangent1 + tangent2) * halfSize );
-				vertices.Add(faceCenter + (-tangent1 + tangent2) * halfSize );
-				vertices.Add(faceCenter + (tangent1 - tangent2) * halfSize );
-				vertices.Add(faceCenter + (-tangent1 - tangent2) * halfSize );
-				
-				for(int i=0; i<4; i++) {
+
+				vertices.Add(faceCenter + (tangent1 + tangent2) * halfSize);
+				vertices.Add(faceCenter + (-tangent1 + tangent2) * halfSize);
+				vertices.Add(faceCenter + (tangent1 - tangent2) * halfSize);
+				vertices.Add(faceCenter + (-tangent1 - tangent2) * halfSize);
+
+				int colorId = voxel.value - 1;
+				Vector2 uv = new Vector2(colorId % 16, colorId / 16);
+				uv += Vector2.one * 0.5f;
+				uv /= 16;
+
+				for (int i = 0; i < 4; i++) {
 					normals.Add(faceDir);
+					uvs.Add(uv);
 				}
 
 
 				List<int> currentSequence = (dir == -1) ? triangleSequenceOffset : triangleSequenceOffsetReverse;
-				foreach( int offset in currentSequence) {
+				foreach (int offset in currentSequence) {
 					triangles.Add(vertices.Count - offset);
 				}
 
 			}
-			
-			
-			
+
+
+
 		}
-		
-		
-		
+
+
 	}
-	
+
+
+
+	private class ModelUpdateThread {
+
+		private List<Vector3> vertices;
+		private List<Vector3> normals;
+		private List<Vector2> uvs;
+		private List<int> triangles;
+		private System.Threading.Thread thread;
+		
+		public bool IsDone {
+			get {return !thread.IsAlive;}
+		}
+
+
+		public ModelUpdateThread( VoxModel model, List<Vector3> voxelPositions, byte value ) {
+			vertices = new List<Vector3>();
+			normals = new List<Vector3>();
+			uvs = new List<Vector2>();
+			triangles = new List<int>();
+
+			thread = new System.Threading.Thread( () => { SetVoxelsValue(model, vertices, normals, uvs, triangles, voxelPositions, value);  } );
+        }
+
+
+		public void Start()
+        {
+			thread.Start();
+        }
+
+		public Mesh GetUpdatedMesh() {
+			Mesh mesh = new Mesh();
+			mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+
+			mesh.SetVertices(vertices);
+			mesh.SetNormals(normals);
+			mesh.SetUVs(0, uvs);
+			mesh.SetTriangles(triangles, 0);
+
+			return mesh;
+        }
+
+	}
+
+
 	
 }

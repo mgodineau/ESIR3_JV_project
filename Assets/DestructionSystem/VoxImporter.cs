@@ -8,9 +8,8 @@ using VoxReader;
 [ScriptedImporter(1, "vox")]
 public class VoxImporter : ScriptedImporter
 {
-	[SerializeField]
-	private float voxelSize = 1;
-	
+	[SerializeField] private float voxelSize = 1;
+	[SerializeField] private bool addCollider = true;
 	
 	
 	public override void OnImportAsset(AssetImportContext ctx)
@@ -22,12 +21,15 @@ public class VoxImporter : ScriptedImporter
 		GameObject gameObject = new GameObject();
 		MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
 		MeshRenderer meshRenderer = gameObject.AddComponent<MeshRenderer>();
-		MeshCollider collider = gameObject.AddComponent<MeshCollider>();
+		
 		
 		VoxBehaviour behaviour = gameObject.AddComponent<VoxBehaviour>();
-		Material material = new Material( Shader.Find("Diffuse") );
 		Texture2D texture = ConvertPaletteToTexture(file.Palette);
 		texture.name = filename + "_palette";
+
+		Material material = new Material(Shader.Find("Standard") );
+		material.name = filename + "_mat";
+		material.mainTexture = texture;
 		
 		ctx.AddObjectToAsset("root", gameObject);
 		ctx.SetMainObject(gameObject);
@@ -43,10 +45,13 @@ public class VoxImporter : ScriptedImporter
 			
 			VoxModel model = ScriptableObject.CreateInstance<VoxModel>();
 			model.SetSize( ConvertVector3(rawModel.Size), voxelSize );
-			
+			model.content = "des trucs et des machins";
+
 			foreach( Voxel voxel in rawModel.Voxels ) {
-				//model.Set( ConvertVector3(voxel.Position), (byte)voxel.Color.GetHashCode() );
-				model.Set(model.VoxelToObjectPosition(ConvertVector3(voxel.Position)), 1);
+				model.Set(
+					model.VoxelToObjectPosition(ConvertVector3(voxel.Position)),
+					(byte)voxel.ColorIndex
+				);
 			}
 			
 			model.name = filename + "_model_" + rawModel.Id;
@@ -59,7 +64,11 @@ public class VoxImporter : ScriptedImporter
 			ctx.AddObjectToAsset("mesh_" + rawModel.Id, mesh);
 			
 			meshFilter.mesh = mesh;
-			collider.sharedMesh = meshFilter.sharedMesh;
+
+			if( addCollider ) {
+				MeshCollider collider = gameObject.AddComponent<MeshCollider>();
+				collider.sharedMesh = meshFilter.sharedMesh;
+            }
 		}
 		
 		meshRenderer.material = material;
@@ -68,12 +77,12 @@ public class VoxImporter : ScriptedImporter
 	
 	
 	private Texture2D ConvertPaletteToTexture( VoxReader.Interfaces.IPalette palette ) {
-		Texture2D tex = new Texture2D(16, 16);
+		Texture2D tex = new Texture2D(16, 16, TextureFormat.RGB24, false);
 		
 		UnityEngine.Color[] colors = System.Array.ConvertAll(palette.Colors, ConvertColor );
 		tex.SetPixels(0, 0, 16, 16, colors);
 		tex.filterMode = FilterMode.Point;
-		
+
 		return tex;
 	}
 	

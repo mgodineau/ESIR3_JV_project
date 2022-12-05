@@ -12,7 +12,7 @@ public class VoxelBomb : MonoBehaviour
 		
 		VoxBehaviour voxBehaviour = other.gameObject.GetComponent<VoxBehaviour>();
 		if( voxBehaviour != null ) {
-			VoxBehaviour.SetSphereAt( transform.position, 0 );
+			VoxBehaviour.SetSphereAt( transform.position, radius );
 			Destroy(gameObject);
 		}
 		

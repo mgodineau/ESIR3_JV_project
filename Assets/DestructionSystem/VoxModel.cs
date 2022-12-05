@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class VoxModel : ScriptableObject, ISerializationCallbackReceiver
+public class VoxModel : ScriptableObject, ISerializationCallbackReceiver, ICloneable
 {
 	private VoxOctree root;
 	[SerializeField] private List<SerializableVoxOctree> voxOctree_serialized;
@@ -28,7 +28,6 @@ public class VoxModel : ScriptableObject, ISerializationCallbackReceiver
 
 	public VoxModel() {
 		voxOctree_serialized = new List<SerializableVoxOctree>();
-		Debug.Log("default constructor");
 	}
 	
 	public void SetSize( Vector3 boundingBox, float voxelSize = 1 ) {
@@ -38,7 +37,6 @@ public class VoxModel : ScriptableObject, ISerializationCallbackReceiver
 		
 		sizeInVoxels = (int)Mathf.Max(boundingBox.x, boundingBox.y, boundingBox.z);
 		_depth = (byte)Mathf.CeilToInt( Mathf.Log(sizeInVoxels, 2) );
-		Debug.Log("depth = " + _depth);
 		sizeInVoxels = (int)Mathf.Pow(2, _depth);
 
 		objectCenterOffset = boundingBox * _voxelSize * 0.5f;
@@ -91,7 +89,6 @@ public class VoxModel : ScriptableObject, ISerializationCallbackReceiver
 		LinkedList<Voxel> voxels = new LinkedList<Voxel>();
 		
 		float objectSize = sizeInVoxels * _voxelSize;
-		Debug.Log(root);
 		root.FillVoxelCollection( voxels, NormalizedToObjectPosition(Vector3.one * 0.5f), objectSize, _depth);
 		return voxels;
 	}
@@ -141,9 +138,20 @@ public class VoxModel : ScriptableObject, ISerializationCallbackReceiver
 		}
 		return new VoxOctreeNode(children);
 	}
-	
-	
-	public struct Voxel {
+
+    public object Clone()
+    {
+		VoxModel clone = ScriptableObject.CreateInstance<VoxModel>();
+		clone.root = (VoxOctree)root.Clone();
+		clone._depth = _depth;
+		clone._voxelSize = _voxelSize;
+		clone.objectCenterOffset = objectCenterOffset;
+		clone.sizeInVoxels = sizeInVoxels;
+		clone.content = "content of a clone !";
+		return clone;
+    }
+
+    public struct Voxel {
 		
 		public Vector3 position;
 		public float size;
@@ -167,7 +175,7 @@ public class VoxModel : ScriptableObject, ISerializationCallbackReceiver
 	
 	
 	
-	abstract class VoxOctree : UnityEngine.Object, ICloneable {
+	abstract class VoxOctree : ICloneable {
 		
 		
 		public abstract byte Get( Vector3 normalizedPosition );
@@ -251,7 +259,14 @@ public class VoxModel : ScriptableObject, ISerializationCallbackReceiver
 		
 		public override object Clone()
 		{
-			return new VoxOctreeNode((VoxOctree[])children.Clone());
+			VoxOctree[] clonedChildren = new VoxOctree[8];
+			for( int i=0; i<8; i++ )
+            {
+				clonedChildren[i] = (VoxOctree)children[i].Clone();
+            }
+
+			return new VoxOctreeNode(clonedChildren);
+			//return new VoxOctreeNode((VoxOctree[])children.Clone());
 		}
 		
 		private byte GetchildId(ref Vector3 normalizedPosition) {
