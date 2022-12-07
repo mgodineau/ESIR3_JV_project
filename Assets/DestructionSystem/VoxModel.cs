@@ -52,15 +52,27 @@ public class VoxModel : ScriptableObject, ISerializationCallbackReceiver, IClone
         }
 		root.Set(ObjectToNormalizedPosition(objectPosition), _depth, value);
 	}
+
+
+	public byte Get( Vector3Int voxelPosition )
+	{
+		return Get( VoxelToObjectPosition(voxelPosition) );
+	}
 	
-	public byte Get(Vector3 objectPosition) {
+	public byte Get(Vector3 objectPosition)
+	{
 		Vector3 normalizedPosition = ObjectToNormalizedPosition(objectPosition);
 		return InUnitCube(normalizedPosition) ? root.Get(normalizedPosition) : (byte)0;
 	}
+
+	public Vector3 VoxelToObjectPosition(Vector3Int voxelPosition) {
+		return ((Vector3)voxelPosition) * _voxelSize - objectCenterOffset;
+	}
 	
-	
-	public Vector3 VoxelToObjectPosition(Vector3 voxelPosition) {
-		return voxelPosition * _voxelSize - objectCenterOffset;
+	public Vector3Int ObjectToVoxelPosition(Vector3 objectPosition)
+	{
+		Vector3 voxelPosition = (objectPosition + objectCenterOffset) / _voxelSize;
+		return Vector3Int.FloorToInt(voxelPosition);
 	}
 	
 	private Vector3 ObjectToNormalizedPosition(Vector3 objectPosition) {

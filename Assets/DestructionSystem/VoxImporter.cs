@@ -56,10 +56,15 @@ public class VoxImporter : ScriptedImporter
 			
 			model.name = filename + "_model_" + rawModel.Id;
 			ctx.AddObjectToAsset("model_" + rawModel.Id, model);
-			behaviour.Model = model;
+			behaviour.model = model;
 			
+			VoxBuilder_cube builder = ScriptableObject.CreateInstance<VoxBuilder_cube>();
+			builder.RefreshEntireModel(model);
+			builder.name = filename + "_builder_" + rawModel.Id;
+			ctx.AddObjectToAsset("builder_"  +rawModel.Id, builder);
+			behaviour.builder = builder;
 			
-			Mesh mesh = behaviour.CreateMeshFromModel(model);
+			Mesh mesh = builder.GetMesh();
 			mesh.name = filename + "_mesh_" + rawModel.Id;
 			ctx.AddObjectToAsset("mesh_" + rawModel.Id, mesh);
 			
@@ -87,8 +92,8 @@ public class VoxImporter : ScriptedImporter
 	}
 	
 	
-	private UnityEngine.Vector3 ConvertVector3( VoxReader.Vector3 vec) {
-		return new UnityEngine.Vector3( vec.X, vec.Z, vec.Y );
+	private UnityEngine.Vector3Int ConvertVector3( VoxReader.Vector3 vec) {
+		return new UnityEngine.Vector3Int( vec.X, vec.Z, vec.Y );
 	}
 	
 	private UnityEngine.Color ConvertColor( VoxReader.Color col) {

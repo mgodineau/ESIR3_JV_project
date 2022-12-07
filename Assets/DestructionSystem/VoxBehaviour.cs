@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter))]
@@ -10,31 +11,34 @@ public class VoxBehaviour : MonoBehaviour
 	private static HashSet<VoxBehaviour> registeredVoxBehaviour = new HashSet<VoxBehaviour>();
 
 
-	[SerializeField]
-	private VoxModel _model;
-	public VoxModel Model {
-		set { _model = value; }
-	}
-
+	[SerializeField] public VoxModel model;
+	[SerializeField] public VoxBuilder_cube builder;
+	
 	private MeshFilter meshComponent;
 	private MeshCollider meshCollider;
 
 
-	private Queue<ModelUpdateThread> pendingModelUpdates = new Queue<ModelUpdateThread>();
-	private ModelUpdateThread runningThread = null;
+	//private Queue<ModelUpdateThread> pendingModelUpdates = new Queue<ModelUpdateThread>();
+	private Queue<System.Threading.Thread> pendingModelUpdates = new Queue<System.Threading.Thread>();
+	private System.Threading.Thread runningThread = null;
 
 	private void Awake()
 	{
-		_model = (VoxModel)_model.Clone();
+		model = (VoxModel)model.Clone();
+		//builder = (VoxBuilder_cube)builder.Clone();
+		
 		meshComponent = GetComponent<MeshFilter>();
 		meshCollider = GetComponent<MeshCollider>();
+
+		// VoxBuilder_cube builder = new VoxBuilder_cube(_model);
+		// SetMesh(builder.GetMesh());
 	}
 
 
     private void LateUpdate()
     {
-        if ( runningThread != null && runningThread.IsDone ) {
-			SetMesh( runningThread.GetUpdatedMesh() );
+        if ( runningThread != null && !runningThread.IsAlive ) {
+			SetMesh( builder.GetMesh() );
 			runningThread = null;
         }
 
@@ -81,8 +85,17 @@ public class VoxBehaviour : MonoBehaviour
     }
 
 
-	private void ScheduleModelUpdate(List<Vector3> voxelPositions, byte value) {
-		pendingModelUpdates.Enqueue( new ModelUpdateThread(_model, voxelPositions, value) );
+	private void ScheduleModelUpdate(List<Vector3> voxelPositions, byte value)
+	{
+		System.Threading.Thread thread = new System.Threading.Thread(() =>
+		{
+			foreach (Vector3 voxel in voxelPositions) {
+				model.Set(voxel, value);
+			}
+			builder.RefreshEntireModel(model);
+		});
+		pendingModelUpdates.Enqueue(thread);
+		// pendingModelUpdates.Enqueue( new ModelUpdateThread(model, voxelPositions, value) );
 	}
 
 	private static void SetVoxelsValue(VoxModel model, List<Vector3> vertices, List<Vector3> normals, List<Vector2> uvs, List<int> triangles, List<Vector3> voxelPositions, byte value) {
@@ -101,18 +114,18 @@ public class VoxBehaviour : MonoBehaviour
 	private List<Vector3> CreateSphereVoxels(Vector3 center, float radius) {
 		List<Vector3> voxels = new List<Vector3>();
 
-		Vector3 centerSnap = center / _model.VoxelSize;
+		Vector3 centerSnap = center / model.VoxelSize;
 		for (int i = 0; i < 3; i++) {
 			centerSnap[i] = Mathf.Round(centerSnap[i]);
 		}
-		centerSnap *= _model.VoxelSize;
+		centerSnap *= model.VoxelSize;
 		float sqrRadius = radius * radius;
 
-		int radiusInVoxels = Mathf.RoundToInt(radius / _model.VoxelSize);
+		int radiusInVoxels = Mathf.RoundToInt(radius / model.VoxelSize);
 		for (int x = -radiusInVoxels; x < radiusInVoxels; x++) {
 			for (int y = -radiusInVoxels; y < radiusInVoxels; y++) {
 				for (int z = -radiusInVoxels; z < radiusInVoxels; z++) {
-					Vector3 offset = new Vector3(x, y, z) * _model.VoxelSize;
+					Vector3 offset = new Vector3(x, y, z) * model.VoxelSize;
 					if (offset.sqrMagnitude <= sqrRadius)
 					{
 						voxels.Add(centerSnap + offset);
