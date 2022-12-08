@@ -1,10 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class VoxelBomb : MonoBehaviour
-{
+namespace DestructionSystem {
+/// <summary>
+/// This Component make the object create a hole when it touches a VoxBehaviour, and destroy itself.
+/// </summary>
+public class VoxelBomb : MonoBehaviour {
 	
+	// the radius of the sphere to cut from the voxel model
 	public float radius = 5;
 	
 	
@@ -19,4 +21,5 @@ public class VoxelBomb : MonoBehaviour
 	}
 	
 	
+}
 }
