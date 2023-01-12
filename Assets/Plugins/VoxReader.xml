@@ -1,0 +1,245 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>VoxReader</name>
+    </assembly>
+    <members>
+        <member name="M:VoxReader.Chunks.Chunk.#ctor(System.Byte[])">
+            <summary>
+            Creates a new chunk using the given data.
+            </summary>
+            <param name="data">Data starting at the first byte of the chunk</param>
+        </member>
+        <member name="P:VoxReader.Color.R">
+            <summary>
+            The red component of the color.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Color.G">
+            <summary>
+            The green component of the color.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Color.B">
+            <summary>
+            The blue component of the color.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Color.A">
+            <summary>
+            The alpha component of the color.
+            </summary>
+        </member>
+        <member name="F:VoxReader.FormatParser.currentOffset">
+            <summary>
+            The current offset in bytes.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IChunk.Type">
+            <summary>
+            The type of the chunk.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IChunk.Content">
+            <summary>
+            The byte content of the chunk.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IChunk.Children">
+            <summary>
+            The children of the chunk, if there are any.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IChunk.TotalBytes">
+            <summary>
+            The total bytes of the chunk data.
+            </summary>
+        </member>
+        <member name="M:VoxReader.Interfaces.IChunk.GetChild``1">
+            <summary>
+            Returns the first child that matches the specified chunk type.
+            </summary>
+        </member>
+        <member name="M:VoxReader.Interfaces.IChunk.GetChildren``1">
+            <summary>
+            Returns all children that match the specified type.
+            </summary>
+        </member>
+        <member name="M:VoxReader.Interfaces.IChunk.GetChildren(VoxReader.ChunkType)">
+            <summary>
+            Returns all children that match the specified chunk type.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IGroupNodeChunk.ChildrenCount">
+            <summary>
+            The number of children nodes.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IGroupNodeChunk.ChildrenNodes">
+            <summary>
+            The ids of the children.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IModel.Size">
+            <summary>
+            The size of the model.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IModel.Voxels">
+            <summary>
+            All voxels that belong to the model.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IModel.Id">
+            <summary>
+            The id of the model.
+            </summary>
+            <remarks>Copies of models share the same id.</remarks>
+        </member>
+        <member name="P:VoxReader.Interfaces.IModel.IsCopy">
+            <summary>
+            Indicates if the model is a copy another model.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.INodeChunk.NodeId">
+            <summary>
+            The id of the node.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.INodeChunk.Attributes">
+            <summary>
+            The attributes assigned to the node.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IPackChunk.ModelCount">
+            <summary>
+            The number of models.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IPaletteChunk.Colors">
+            <summary>
+            The colors stored in the RGBA chunk.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IShapeNodeChunk.ModelCount">
+            <summary>
+            The number of models. Must be '1'.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IShapeNodeChunk.Models">
+            <summary>
+            The ids of the models.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.ISizeChunk.Size">
+            <summary>
+            The size that is specified in the SIZE chunk.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.ITransformNodeChunk.Name">
+            <summary>
+            The name of the node.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.ITransformNodeChunk.IsHidden">
+            <summary>
+            True if the node is hidden.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.ITransformNodeChunk.ChildNodeId">
+            <summary>
+            The id of the child node.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.ITransformNodeChunk.ReservedId">
+            <summary>
+            Must be '-1'.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.ITransformNodeChunk.LayerId">
+            <summary>
+            The id of the layer this node is on.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.ITransformNodeChunk.FrameCount">
+            <summary>
+            The number of frames of this node. Must be '1'.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IVoxelChunk.Voxels">
+            <summary>
+            All voxels that are contained in the XYZI chunk.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IVoxFile.VersionNumber">
+            <summary>
+            The version number specified in the file.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IVoxFile.Models">
+            <summary>
+            All models contained in the file.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IVoxFile.Palette">
+            <summary>
+            The palette that is stored in the file.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Interfaces.IVoxFile.Chunks">
+            <summary>
+            All chunks inside the MAIN chunk.
+            </summary>
+        </member>
+        <member name="P:VoxReader.RawVoxel.Position">
+            <summary>
+            The position of the voxel.
+            </summary>
+        </member>
+        <member name="P:VoxReader.RawVoxel.ColorIndex">
+            <summary>
+            The color index of the voxel.
+            </summary>
+        </member>
+        <member name="F:VoxReader.Vector3.X">
+            <summary>
+            The x-component of the vector (right).
+            </summary>
+        </member>
+        <member name="F:VoxReader.Vector3.Y">
+            <summary>
+            The y-component of the vector (forward).
+            </summary>
+        </member>
+        <member name="F:VoxReader.Vector3.Z">
+            <summary>
+            The z-component of the vector (up).
+            </summary>
+        </member>
+        <member name="P:VoxReader.Voxel.Position">
+            <summary>
+            The position of the voxel.
+            </summary>
+        </member>
+        <member name="P:VoxReader.Voxel.Color">
+            <summary>
+            The color of the voxel.
+            </summary>
+        </member>
+        <member name="T:VoxReader.VoxReader">
+            <summary>
+            Used to read data from .vox files.
+            </summary>
+        </member>
+        <member name="M:VoxReader.VoxReader.Read(System.String)">
+            <summary>
+            Reads the file at the provided path.
+            </summary>
+        </member>
+        <member name="M:VoxReader.VoxReader.Read(System.Byte[])">
+            <summary>
+            Reads the data from the provided byte array.
+            </summary>
+        </member>
+    </members>
+</doc>
