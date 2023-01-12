@@ -7,7 +7,9 @@ namespace DestructionSystem {
 [CreateAssetMenu(menuName = "ScriptableObjects/VoxBuilderCube")]
 public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 	
-	
+	[Serializable]
+	private class MonitoredVertexList : MonitoredList<VertexLayout> {}
+
 	// dictionary that maps voxels positions to indexes of their faces in the "faces" list
 	private readonly Dictionary<Vector3Int, FaceIds> _positionToFaces;
 	
@@ -17,14 +19,17 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 	
 	// lists containing the data to build the mesh with
 	[SerializeField] private List<int> triangles;
-	[SerializeField] private List<Vector3> vertices;
-	[SerializeField] private List<Vector3> normals;
-	[SerializeField] private List<Vector2> uvs;
+	// [SerializeField] private List<VertexLayout> vertices;
+	[SerializeReference] private MonitoredVertexList vertices;
 	
 	// list of faces, on which faces are in the same order as in the previous lists
 	[SerializeField] private List<RegisteredFace> faces;
-	
-	
+
+
+	// private int chunkSize;
+	// private SortedSet<int> updatedChunksIndexes;
+
+
 	/// <summary>
 	/// Build an instance of VoxBuilderCube
 	/// </summary>
@@ -32,14 +37,15 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 		_positionToFaces = new Dictionary<Vector3Int, FaceIds>();
 		
 		triangles = new List<int>();
-		vertices = new List<Vector3>();
-		normals = new List<Vector3>();
-		uvs = new List<Vector2>();
+		vertices = new MonitoredVertexList();
 		
 		faces = new List<RegisteredFace>();
 		
 		positionToFacesSerializedKeys = new List<Vector3Int>();
 		positionToFacesSerializedValues = new List<FaceIds>();
+
+		// chunkSize = 32;
+		// updatedChunksIndexes = new SortedSet<int>();
 	}
 	
 	
@@ -65,14 +71,40 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 	/// <returns>A new mesh</returns>
 	public Mesh GetMesh() {
 		Mesh mesh = new Mesh { indexFormat = IndexFormat.UInt32 };
-
-		mesh.SetVertices(vertices);
-		mesh.SetUVs(0, uvs);
-		mesh.SetNormals(normals);
-
-		mesh.SetTriangles(triangles, 0);
-
+		
+		mesh.SetVertexBufferParams(vertices.Count, VertexLayout.layout);
+		mesh.SetVertexBufferData(vertices, 0, 0, vertices.Count);
+		
+		mesh.SetIndexBufferParams( triangles.Count, IndexFormat.UInt32 );
+		mesh.SetIndexBufferData( triangles, 0, 0, triangles.Count );
+		
+		mesh.subMeshCount = 1;
+		mesh.SetSubMesh(0, new SubMeshDescriptor(0, triangles.Count));
+		
 		return mesh;
+	}
+
+	public void UpdateMesh(Mesh mesh) {
+		
+		mesh.SetVertexBufferParams(vertices.Count, VertexLayout.layout);
+		foreach ( KeyValuePair<int, int> chunkLocationAndSize in vertices.GetUpdatedChunks())
+		{
+			int startIndex = chunkLocationAndSize.Key * vertices.chunkSize;
+			int currentChunkSize = chunkLocationAndSize.Value * vertices.chunkSize;
+			currentChunkSize = Mathf.Min(currentChunkSize, vertices.Count - startIndex);
+			if (currentChunkSize <= 0) { break;
+			}
+			
+			mesh.SetVertexBufferData(vertices, startIndex, startIndex, currentChunkSize);
+		}
+		vertices.ClearUpdatedChunks();
+		
+		
+		mesh.SetIndexBufferParams( triangles.Count, IndexFormat.UInt32 );
+		mesh.SetIndexBufferData( triangles, 0, 0, triangles.Count );
+		
+		mesh.subMeshCount = 1;
+		mesh.SetSubMesh(0, new SubMeshDescriptor(0, triangles.Count));
 	}
 	
 	
@@ -126,8 +158,6 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 		_positionToFaces.Clear();
 		triangles.Clear();
 		vertices.Clear();
-		uvs.Clear();
-		normals.Clear();
 		faces.Clear();
 	}
 	
@@ -217,10 +247,11 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 		Vector3 faceCenter = voxel.Position + faceDir * halfSize;
 		
 		// create the 4 vertices of the face
-		vertices.Add(faceCenter + (tangent1 + tangent2) * halfSize);
-		vertices.Add(faceCenter + (-tangent1 + tangent2) * halfSize);
-		vertices.Add(faceCenter + (tangent1 - tangent2) * halfSize);
-		vertices.Add(faceCenter + (-tangent1 - tangent2) * halfSize);
+		List<Vector3> positions = new List<Vector3>();
+		positions.Add(faceCenter + (tangent1 + tangent2) * halfSize);
+		positions.Add(faceCenter + (-tangent1 + tangent2) * halfSize);
+		positions.Add(faceCenter + (tangent1 - tangent2) * halfSize);
+		positions.Add(faceCenter + (-tangent1 - tangent2) * halfSize);
 		
 		// create the uv of each corner (assume the face is filled with only one color)
 		int colorId = voxel.Value - 1;
@@ -229,9 +260,9 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 		uv /= 16;
 		
 		// add the normals and uv coords of the 4 vertices of the face
-		for (int i = 0; i < 4; i++) {
-			normals.Add(faceDir);
-			uvs.Add(uv);
+		foreach (Vector3 position in positions) {
+			vertices.Add( new VertexLayout(){position = position, normal = faceDir, uv = uv} );
+			// updatedChunksIndexes.Add((vertices.Count - 1) / chunkSize );
 		}
 
 		
@@ -290,8 +321,7 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 			int dstIndex = vertexStartIndex + i;
 			int srcIndex = vertices.Count - vertexCount + i;
 			vertices[dstIndex] = vertices[srcIndex];
-			uvs[dstIndex] = uvs[srcIndex];
-			normals[dstIndex] = normals[srcIndex];
+			// updatedChunksIndexes.Add( dstIndex / chunkSize );
 		}
 		
 		// copy the triangles at the end of the triangles list over the triangles of the removed face
@@ -303,8 +333,6 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 		}
 		
 		// remove the face at the end of the list
-		uvs.RemoveRange(vertices.Count - vertexCount, vertexCount);
-		normals.RemoveRange(vertices.Count - vertexCount, vertexCount);
 		vertices.RemoveRange(vertices.Count - vertexCount, vertexCount);
 		triangles.RemoveRange(triangles.Count - triangleCount, triangleCount);
 	}
@@ -343,5 +371,21 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 			set { ids[index] = value; }
 		}
 	}
+
+	[Serializable]
+	private struct VertexLayout
+	{
+		public static readonly VertexAttributeDescriptor[] layout = new VertexAttributeDescriptor[]
+		{
+			new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3),
+			new VertexAttributeDescriptor(VertexAttribute.Normal, VertexAttributeFormat.Float32, 3),
+			new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2)
+		};
+		
+		public Vector3 position;
+		public Vector3 normal;
+		public Vector2 uv;
+	}
+	
 }
 }

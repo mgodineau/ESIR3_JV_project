@@ -19,7 +19,8 @@ public class VoxBehaviour : MonoBehaviour {
 	
 	private MeshFilter _meshComponent;
 	private MeshCollider _meshCollider;
-	
+
+
 	
 	// a list of thread that contains model updates. none of them is started
 	private readonly Queue<System.Threading.Thread> _pendingModelUpdates = new Queue<System.Threading.Thread>();
@@ -40,7 +41,9 @@ public class VoxBehaviour : MonoBehaviour {
 	private void LateUpdate() {
 		// when the current thread is done updating the model, display the new mesh
 		if (_runningThread?.IsAlive == false) {
-			SetMesh(builder.GetMesh());
+			Mesh mesh = _meshComponent.mesh;
+			builder.UpdateMesh(mesh);
+			SetMesh(mesh);
 			_runningThread = null;
 		}
 		
