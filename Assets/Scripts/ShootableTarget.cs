@@ -31,9 +31,10 @@ public class ShootableTarget : MonoBehaviour
     }
     private void OnCollisionEnter(Collision collision)
     {
-        if(collision.gameObject.name == "Projectile(Clone)")
+        if(collision.gameObject.GetComponent<Projectile>() !=null)
         {
-            TakeDamage(1);
+            TakeDamage(collision.gameObject.GetComponent<Projectile>().GetDammage());
+            Destroy(collision.gameObject);
         }
         
     }

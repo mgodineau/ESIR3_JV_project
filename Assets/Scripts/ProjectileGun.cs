@@ -18,7 +18,7 @@ public class ProjectileGun : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.Mouse0))
         {
             GameObject projectile = Instantiate(projectile_prefab, gun_end.position, transform.rotation);
-            projectile.GetComponent<Rigidbody>().AddForce(gun_end.forward * 1000);
+            projectile.GetComponent<Rigidbody>().AddForce(gun_end.forward * 600);
         }
     }
 }
