@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -8,7 +10,7 @@ namespace DestructionSystem {
 public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 	
 	[Serializable]
-	private class MonitoredVertexList : MonitoredList<VertexLayout> {}
+	private class MonitoredVertexList : Utils.MonitoredList<VertexLayout> {}
 
 	// dictionary that maps voxels positions to indexes of their faces in the "faces" list
 	private readonly Dictionary<Vector3Int, FaceIds> _positionToFaces;
@@ -25,11 +27,10 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 	// list of faces, on which faces are in the same order as in the previous lists
 	[SerializeField] private List<RegisteredFace> faces;
 
-
-	// private int chunkSize;
-	// private SortedSet<int> updatedChunksIndexes;
-
-
+	[SerializeField] public UVMappingStrategy uvMapping;
+	
+	
+	
 	/// <summary>
 	/// Build an instance of VoxBuilderCube
 	/// </summary>
@@ -44,8 +45,7 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 		positionToFacesSerializedKeys = new List<Vector3Int>();
 		positionToFacesSerializedValues = new List<FaceIds>();
 
-		// chunkSize = 32;
-		// updatedChunksIndexes = new SortedSet<int>();
+		uvMapping = UVMappingStrategy.UsePalette;
 	}
 	
 	
@@ -81,6 +81,7 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 		mesh.subMeshCount = 1;
 		mesh.SetSubMesh(0, new SubMeshDescriptor(0, triangles.Count));
 		
+		mesh.RecalculateBounds();
 		return mesh;
 	}
 
@@ -98,10 +99,13 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 			mesh.SetVertexBufferData(vertices, startIndex, startIndex, currentChunkSize);
 		}
 		vertices.ClearUpdatedChunks();
-		
-		
+
+		int previousIndexCount = (int)mesh.GetIndexCount(0);
 		mesh.SetIndexBufferParams( triangles.Count, IndexFormat.UInt32 );
-		mesh.SetIndexBufferData( triangles, 0, 0, triangles.Count );
+		if ( previousIndexCount < triangles.Count )
+		{
+			mesh.SetIndexBufferData(triangles, previousIndexCount, previousIndexCount, triangles.Count - previousIndexCount);
+		}
 		
 		mesh.subMeshCount = 1;
 		mesh.SetSubMesh(0, new SubMeshDescriptor(0, triangles.Count));
@@ -249,20 +253,20 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 		// create the 4 vertices of the face
 		List<Vector3> positions = new List<Vector3>();
 		positions.Add(faceCenter + (tangent1 + tangent2) * halfSize);
-		positions.Add(faceCenter + (-tangent1 + tangent2) * halfSize);
-		positions.Add(faceCenter + (tangent1 - tangent2) * halfSize);
+		positions.Add(faceCenter + axisSign * (tangent1 - tangent2) * halfSize);
+		positions.Add(faceCenter + axisSign * (-tangent1 + tangent2) * halfSize);
 		positions.Add(faceCenter + (-tangent1 - tangent2) * halfSize);
 		
 		// create the uv of each corner (assume the face is filled with only one color)
-		int colorId = voxel.Value - 1;
-		Vector2 uv = new Vector2(colorId % 16, (int)((float)colorId / 16));
-		uv += Vector2.one * 0.5f;
-		uv /= 16;
-		
+		// int colorId = voxel.Value - 1;
+		// Vector2 uv = new Vector2(colorId % 16, (int)((float)colorId / 16));
+		// uv += Vector2.one * 0.5f;
+		// uv /= 16;
+		Vector2[] uvs = CreateFaceUVs(model, voxel, positions);
+
 		// add the normals and uv coords of the 4 vertices of the face
-		foreach (Vector3 position in positions) {
-			vertices.Add( new VertexLayout(){position = position, normal = faceDir, uv = uv} );
-			// updatedChunksIndexes.Add((vertices.Count - 1) / chunkSize );
+		for (int i = 0; i<positions.Count; i++) {
+			vertices.Add( new VertexLayout(){position = positions[i], normal = faceDir, uv = uvs[i]} );
 		}
 
 		
@@ -271,16 +275,43 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 			3, 4, 2,
 			2, 1, 3,
 		};
-
-		List<int> triangleSequenceOffsetReverse = new List<int>(triangleSequenceOffset);
-		triangleSequenceOffsetReverse.Reverse();
-
-		List<int> currentSequence = (axisSign == -1) ? triangleSequenceOffset : triangleSequenceOffsetReverse;
-		foreach (int offset in currentSequence) {
+		
+		foreach (int offset in triangleSequenceOffset) {
 			triangles.Add(vertices.Count - offset);
 		}
 	}
 
+	private Vector2[] CreateFaceUVs( VoxModel model, VoxModel.Voxel voxel, List<Vector3> positions)
+	{
+		switch (uvMapping)
+		{
+			case UVMappingStrategy.UsePalette:
+				int colorId = voxel.Value - 1;
+				Vector2 uvPal = new Vector2(colorId % 16, (int)((float)colorId / 16));
+				uvPal += Vector2.one * 0.5f;
+				uvPal /= 16;
+				return new Vector2[] { uvPal, uvPal, uvPal, uvPal};
+			
+			case UVMappingStrategy.ProjectionXZ:
+				Vector3Int positionVox = model.ObjectToVoxelPosition(voxel.Position);
+				Vector2 uvProj = new Vector2( 
+					(float)positionVox.x / model.BoundingBox.x,
+					(float)positionVox.z / model.BoundingBox.z);
+				return new Vector2[] { uvProj, uvProj, uvProj, uvProj};
+
+			case UVMappingStrategy.UseFullTexture:
+				return new Vector2[]
+				{
+					Vector2.zero,
+					Vector2.right,
+					Vector2.up, 
+					Vector2.one
+				};
+		}
+
+		return new Vector2[]{};
+	}
+	
 	
 	/// <summary>
 	/// Remove the face of a voxel from a specified direction
@@ -288,7 +319,7 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 	/// <param name="model">The model of the voxel</param>
 	/// <param name="voxel">A voxel</param>
 	/// <param name="dir">The index of the direction, between 0 and 5(included)</param>
-	void RemoveFace(VoxModel model, VoxModel.Voxel voxel, int dir) {
+	private void RemoveFace(VoxModel model, VoxModel.Voxel voxel, int dir) {
 		// check that the voxel position is registered in _positionToFaces, which means it may have faces
 		Vector3Int voxelPosition = model.ObjectToVoxelPosition(voxel.Position);
 		if (!_positionToFaces.ContainsKey(voxelPosition)) {
@@ -386,6 +417,15 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 		public Vector3 normal;
 		public Vector2 uv;
 	}
+
+	[Serializable]
+	public enum UVMappingStrategy
+	{
+		UsePalette,
+		UseFullTexture,
+		ProjectionXZ
+	}
+	
 	
 }
 }

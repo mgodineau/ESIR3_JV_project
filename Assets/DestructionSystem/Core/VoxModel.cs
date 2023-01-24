@@ -12,6 +12,10 @@ public class VoxModel : ScriptableObject, ISerializationCallbackReceiver
 	
 	[SerializeField] private byte depth;
 	public byte Depth => depth;
+
+
+	[SerializeField] private Vector3Int boundingBox;
+	public Vector3Int BoundingBox => boundingBox;
 	
 	[SerializeField] private float voxelSize;
 	public float VoxelSize => voxelSize;
@@ -20,21 +24,22 @@ public class VoxModel : ScriptableObject, ISerializationCallbackReceiver
 	
 	[SerializeField] private int sizeInVoxels;
 	public int SizeInVoxels => sizeInVoxels;
-
+	
 	public VoxModel() {
 		voxOctreeSerialized = new List<SerializableVoxOctree>();
 	}
 	
-	public void SetSize( Vector3 boundingBox, float size = 1 ) {
+	public void SetSize( Vector3Int boundingBox, float size = 1 ) {
 		content = "des trucs et des machins";
-		
-		this.voxelSize = size;
+
+		this.boundingBox = boundingBox;
+		voxelSize = size;
 		
 		sizeInVoxels = (int)Mathf.Max(boundingBox.x, boundingBox.y, boundingBox.z);
 		depth = (byte)Mathf.CeilToInt( Mathf.Log(sizeInVoxels, 2) );
 		sizeInVoxels = (int)Mathf.Pow(2, depth);
 
-		objectCenterOffset = boundingBox * this.voxelSize * 0.5f;
+		objectCenterOffset = (Vector3)boundingBox * voxelSize * 0.5f;
 		objectCenterOffset.y = 0;
 		_root = new VoxOctreeLeaf();
 	}
@@ -121,21 +126,30 @@ public class VoxModel : ScriptableObject, ISerializationCallbackReceiver
 	public LinkedList<Voxel> GetVoxelsBetween(Vector3 cornerLow, Vector3 cornerHight, bool includeEmpty = false) {
 		
 		LinkedList<Voxel> voxels = new LinkedList<Voxel>();
-		_root.GetVoxelsBetween(voxels, cornerLow, cornerHight, NormalizedToObjectPosition(Vector3.one*0.5f), depth, voxelSize * sizeInVoxels, includeEmpty  );
-		
+		if (_root != null)
+		{
+			_root.GetVoxelsBetween(voxels, cornerLow, cornerHight, NormalizedToObjectPosition(Vector3.one * 0.5f),
+				depth, voxelSize * sizeInVoxels, includeEmpty);
+		}
+
 		return voxels;
 	}
 
 	public void OnBeforeSerialize()
 	{
 		voxOctreeSerialized.Clear();
-		SerializeVoxOctree(_root);
+		if (_root != null)
+		{
+			SerializeVoxOctree(_root);
+		}
 	}
 
 	public void OnAfterDeserialize()
 	{
-		//int nodeCount = 0;
-		_root = DeserializeVoxOctree(0, out int _);
+		if (voxOctreeSerialized.Count != 0)
+		{
+			_root = DeserializeVoxOctree(0, out int _);
+		}
 		voxOctreeSerialized.Clear();
 	}
 	

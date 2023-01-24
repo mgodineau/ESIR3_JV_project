@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
-namespace DestructionSystem
+namespace DestructionSystem.Utils
 {
 	[Serializable]
 	public class MonitoredList<T> : List<T>, ISerializationCallbackReceiver
