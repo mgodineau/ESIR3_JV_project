@@ -14,7 +14,7 @@ TagManager:
   - isPlayer
   - isGround
   - isEnemy
-  - 
+  - isWall
   - 
   - 
   - 

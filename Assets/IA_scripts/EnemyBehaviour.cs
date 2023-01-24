@@ -8,12 +8,19 @@ public class EnemyBehaviour : MonoBehaviour
     //Define objects
     public NavMeshAgent agent;
     public Transform player;
-    public LayerMask isGround, isPlayer;
+    public LayerMask isGround, isPlayer, isWall;
+
+    //States
+    public bool isPatroling = true;
+    public bool isChasing = false;
+    public bool isAttacking = false;
 
     //Patroling
     public Vector3 walkPoint;           //Point to go while walking
     bool walkPointSet = false;          //If a walk point is set
     public float walkPointRange = 10;    //walkPoint def range
+
+    //private GameObject s;     //physic point (DEBUG)
 
     //Attacking
     public float timeBetweenAttacks;
@@ -33,29 +40,73 @@ public class EnemyBehaviour : MonoBehaviour
 
     private void Update()
     {
-        //Check for sight and attack range
-        playerInSightRange = Physics.CheckSphere(transform.position, sightRange, isPlayer);
-        playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, isPlayer);
+        //Patroling state
+        if (isPatroling)
+        {
+            //Check sight range
+            playerInSightRange = inSigth();
+            //Debug.Log("inSightRange" + playerInSightRange);
 
-        if (!playerInSightRange && !playerInAttackRange) Patroling();
-        if (playerInSightRange && !playerInAttackRange) ChasePlayer();
-        if (playerInAttackRange && playerInSightRange) AttackPlayer();
+            if (playerInSightRange)
+            {
+                isChasing = true;
+                isPatroling = false;        
+            }
+        }
+
+        //Chasing state
+        else if (isChasing)
+        {
+            //Chack attack range
+            playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, isPlayer);
+            if (playerInAttackRange)
+            {
+                isAttacking = true; 
+                isChasing = false;
+            }
+        }
+
+        //Attacking state
+
+        if (isPatroling) Patroling();
+        else if (isChasing) ChasePlayer();
+        else if (isAttacking) AttackPlayer();
     }
 
+    private bool inSigth()
+    {
+        playerInSightRange = Physics.CheckSphere(transform.position, sightRange, isPlayer);
+        if (playerInSightRange)
+        {
+            //check walls
+            bool intersect = Physics.Raycast(transform.position, player.position - transform.position, sightRange, isWall);     //Raycast(position, direction, maxdistance, tag)
+
+            if (!intersect)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
     private void Patroling()
     {
         if (!walkPointSet) SearchWalkPoint();
 
         if (walkPointSet)
+        {
             agent.SetDestination(walkPoint);
-            Debug.Log("Patroling ZZZZ!");
+            //Debug.Log("Patroling ZZZZ!");
+        }
 
         Vector3 distanceToWalkPoint = transform.position - walkPoint;
 
         //Walkpoint reached
         if (distanceToWalkPoint.magnitude < 1f)
+        {
             walkPointSet = false;
+        }
     }
+
     private void SearchWalkPoint()
     {
         //Calculate random point in range
@@ -64,8 +115,18 @@ public class EnemyBehaviour : MonoBehaviour
 
         walkPoint = new Vector3(transform.position.x + randomX, transform.position.y, transform.position.z + randomZ);
 
-        if (Physics.Raycast(walkPoint, -transform.up, 2f, isGround))
+        //Show walkPoint DEBUG
+        /*
+        s = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        s.transform.position = walkPoint;
+        Destroy(s,3);
+        */
+
+        // Check walkPoint throught walls and check ground
+        if (Physics.Raycast(walkPoint, -transform.up, 2f, isGround) && !Physics.Raycast(transform.position, walkPoint - transform.position, (walkPoint - transform.position).magnitude, isWall))
+        {
             walkPointSet = true;
+        }
     }
 
     private void ChasePlayer()
