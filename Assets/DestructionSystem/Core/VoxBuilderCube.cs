@@ -105,7 +105,7 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 			
 			mesh.SetVertexBufferData(vertices, startIndex, startIndex, currentChunkSize, 0, flags);
 		}
-		vertices.ClearUpdatedChunks();
+		// vertices.ClearUpdatedChunks();
 
 		int previousIndexCount = (int)mesh.GetIndexCount(0);
 		mesh.SetIndexBufferParams( triangles.Count, IndexFormat.UInt32 );

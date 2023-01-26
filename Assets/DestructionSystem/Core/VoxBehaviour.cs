@@ -27,29 +27,28 @@ public class VoxBehaviour : MonoBehaviour {
 	private readonly Queue<System.Threading.Thread> _pendingModelUpdates = new Queue<System.Threading.Thread>();
 	// a running thread that updates the model. Can be null
 	private System.Threading.Thread _runningThread;
+	private bool _isMeshColliderNull;
 
 	private void Awake() {
+		// get some components. the collider can be null
+		_meshComponent = GetComponent<MeshFilter>();
+		_meshCollider = GetComponent<MeshCollider>();
+		_isMeshColliderNull = _meshCollider == null;
+		
+		
 		// duplicate the model and it's builder to not change any assets
 		model = Instantiate(model);
 		builder = Instantiate(builder);
 		
-		// get some components. the collider can be null
-		_meshComponent = GetComponent<MeshFilter>();
-		_meshCollider = GetComponent<MeshCollider>();
+		// duplicate the mesh, to not modify the asset
+		SetMesh( _meshComponent.mesh );
 	}
 
 
 	private void LateUpdate() {
 		// when the current thread is done updating the model, display the new mesh
 		if (_runningThread?.IsAlive == false) {
-			// Mesh mesh = _meshComponent.mesh;
-			// builder.UpdateMesh(mesh);
-			// SetMesh(mesh);
-			builder.UpdateMesh(_meshComponent.mesh);
-			if ( _meshCollider != null )
-			{
-				_meshCollider.sharedMesh = _meshComponent.mesh;
-			}
+			builder.UpdateMesh( _isMeshColliderNull ? _meshComponent.sharedMesh : _meshCollider.sharedMesh);
 			_runningThread = null;
 		}
 		
