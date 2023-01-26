@@ -45,7 +45,7 @@ namespace DestructionSystem
 			MeshRenderer meshRenderer = gameObject.AddComponent<MeshRenderer>();
 			VoxBehaviour behaviour = gameObject.AddComponent<VoxBehaviour>();
 
-			VoxModel model = ScriptableObject.CreateInstance<VoxModel>();
+			VoxModelOctree model = ScriptableObject.CreateInstance<VoxModelOctree>();
 			FillModel(model, filename);
 
 			model.name = filename + "_model";
@@ -87,7 +87,7 @@ namespace DestructionSystem
 		}
 
 
-		private void FillModel(VoxModel model, string filename)
+		private void FillModel(IVoxModel model, string filename)
 		{
 
 			Vector3Int boundingBox = new Vector3Int(

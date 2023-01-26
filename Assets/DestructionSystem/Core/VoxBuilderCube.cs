@@ -71,6 +71,7 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 	/// <returns>A new mesh</returns>
 	public Mesh GetMesh() {
 		Mesh mesh = new Mesh { indexFormat = IndexFormat.UInt32 };
+		mesh.MarkDynamic();
 		
 		mesh.SetVertexBufferParams(vertices.Count, VertexLayout.layout);
 		mesh.SetVertexBufferData(vertices, 0, 0, vertices.Count);
@@ -85,7 +86,13 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 		return mesh;
 	}
 
-	public void UpdateMesh(Mesh mesh) {
+	public void UpdateMesh(Mesh mesh)
+	{
+
+		MeshUpdateFlags flags =
+			MeshUpdateFlags.DontNotifyMeshUsers
+			| MeshUpdateFlags.DontRecalculateBounds
+			| MeshUpdateFlags.DontValidateIndices;
 		
 		mesh.SetVertexBufferParams(vertices.Count, VertexLayout.layout);
 		foreach ( KeyValuePair<int, int> chunkLocationAndSize in vertices.GetUpdatedChunks())
@@ -96,7 +103,7 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 			if (currentChunkSize <= 0) { break;
 			}
 			
-			mesh.SetVertexBufferData(vertices, startIndex, startIndex, currentChunkSize);
+			mesh.SetVertexBufferData(vertices, startIndex, startIndex, currentChunkSize, 0, flags);
 		}
 		vertices.ClearUpdatedChunks();
 
@@ -104,11 +111,13 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 		mesh.SetIndexBufferParams( triangles.Count, IndexFormat.UInt32 );
 		if ( previousIndexCount < triangles.Count )
 		{
-			mesh.SetIndexBufferData(triangles, previousIndexCount, previousIndexCount, triangles.Count - previousIndexCount);
+			mesh.SetIndexBufferData(triangles, previousIndexCount, previousIndexCount, triangles.Count - previousIndexCount, flags);
 		}
 		
 		mesh.subMeshCount = 1;
-		mesh.SetSubMesh(0, new SubMeshDescriptor(0, triangles.Count));
+		mesh.SetSubMesh(0, new SubMeshDescriptor(0, triangles.Count), flags);
+		
+		mesh.MarkModified();
 	}
 	
 	
@@ -116,20 +125,20 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 	/// <summary>
 	/// Clear the mesh data and rebuilt it according to the specified model
 	/// </summary>
-	/// <param name="model">The model to build the mesh with</param>
-	public void RefreshEntireModel(VoxModel model) {
+	/// <param name="modelOctree">The model to build the mesh with</param>
+	public void RefreshEntireModel(IVoxModel modelOctree) {
 		ClearMesh();
 
-		LinkedList<VoxModel.Voxel> voxels = model.GetVoxels();
+		LinkedList<VoxModelOctree.Voxel> voxels = modelOctree.GetVoxels();
 
-		foreach (VoxModel.Voxel voxel in voxels) {
+		foreach (VoxModelOctree.Voxel voxel in voxels) {
 			for (int dir = 0; dir < 6; dir++) {
 				int axis = dir / 2;
 				int axisSign = (dir % 2 == 0) ? 1 : -1;
 				Vector3 nextPosition = voxel.Position;
 				nextPosition[axis] += axisSign * voxel.Size;
-				if (model.Get(nextPosition) == 0) {
-					AddFace(model, voxel, dir);
+				if (modelOctree.Get(nextPosition) == 0) {
+					AddFace(modelOctree, voxel, dir);
 				}
 			}
 		}
@@ -139,17 +148,21 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 	/// <summary>
 	/// Update only a small part of the mesh, according to a specified model. The updated part is a rectangular cuboid.
 	/// </summary>
-	/// <param name="model">The model to read the updates from</param>
+	/// <param name="modelOctree">The model to read the updates from</param>
 	/// <param name="cornerLow">The lower corner of the area to update, in object coordinates.</param>
 	/// <param name="cornerHigh">The upper corner of the area to update, in object coordinates.</param>
-	public void RefreshRegion(VoxModel model, Vector3 cornerLow, Vector3 cornerHigh) {
-		LinkedList<VoxModel.Voxel> voxels = model.GetVoxelsBetween(cornerLow, cornerHigh, true);
+	public void RefreshRegion(IVoxModel modelOctree, Vector3 cornerLow, Vector3 cornerHigh) {
+		LinkedList<VoxModelOctree.Voxel> voxels = modelOctree.GetVoxelsBetween(cornerLow, cornerHigh, true);
 
-		foreach (VoxModel.Voxel voxel in voxels) {
-			if (voxel.Value == 0) {
-				RemoveVoxelFaces(model, voxel);
-			} else {
-				AddVoxelFaces(model, voxel);
+		foreach (VoxModelOctree.Voxel voxel in voxels)
+		{
+			if (voxel.Value == 0)
+			{
+				RemoveVoxelFaces(modelOctree, voxel);
+			}
+			else
+			{
+				AddVoxelFaces(modelOctree, voxel);
 			}
 		}
 	}
@@ -169,10 +182,10 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 	/// <summary>
 	/// Remove every faces of a voxel. Does nothing for faces that did not exists.
 	/// </summary>
-	/// <param name="model">The model of the voxel</param>
+	/// <param name="modelOctree">The model of the voxel</param>
 	/// <param name="voxel">A voxel</param>
-	private void RemoveVoxelFaces(VoxModel model, VoxModel.Voxel voxel) {
-		Vector3Int voxelPosition = model.ObjectToVoxelPosition(voxel.Position);
+	private void RemoveVoxelFaces(IVoxModel modelOctree, VoxModelOctree.Voxel voxel) {
+		Vector3Int voxelPosition = modelOctree.ObjectToVoxelPosition(voxel.Position);
 		if (!_positionToFaces.ContainsKey(voxelPosition)) {
 			return;
 		}
@@ -180,7 +193,7 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 		FaceIds faceId = _positionToFaces[voxelPosition];
 		for (int dir = 0; dir < 6; dir++) {
 			if (faceId[dir] != -1) {
-				RemoveFace(model, voxel, dir);
+				RemoveFace(modelOctree, voxel, dir);
 				faceId[dir] = -1;
 			}
 		}
@@ -192,20 +205,20 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 	/// <summary>
 	/// Add every visible faces of a given voxel, and remove invisible faces.
 	/// </summary>
-	/// <param name="model">The model of the voxel</param>
+	/// <param name="modelOctree">The model of the voxel</param>
 	/// <param name="voxel">A voxel</param>
-	private void AddVoxelFaces(VoxModel model, VoxModel.Voxel voxel) {
+	private void AddVoxelFaces(IVoxModel modelOctree, VoxModelOctree.Voxel voxel) {
 		for (int dir = 0; dir < 6; dir++) {
 			int axis = dir / 2;
 			int axisSign = (dir % 2 == 0) ? 1 : -1;
 
-			Vector3Int nextPosition = model.ObjectToVoxelPosition(voxel.Position);
+			Vector3Int nextPosition = modelOctree.ObjectToVoxelPosition(voxel.Position);
 			nextPosition[axis] += axisSign;
 
-			if (model.Get(nextPosition) == 0) {
-				AddFace(model, voxel, dir);
+			if (modelOctree.Get(nextPosition) == 0) {
+				AddFace(modelOctree, voxel, dir);
 			} else {
-				RemoveFace(model, voxel, dir);
+				RemoveFace(modelOctree, voxel, dir);
 			}
 		}
 	}
@@ -214,12 +227,12 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 	/// <summary>
 	/// Add a face to a voxel in a specific direction. Does nothing if the face already exists
 	/// </summary>
-	/// <param name="model">The model of the voxel</param>
+	/// <param name="modelOctree">The model of the voxel</param>
 	/// <param name="voxel">A voxel</param>
 	/// <param name="dir">The index of the direction, between 0 and 5(included)</param>
-	private void AddFace(VoxModel model, VoxModel.Voxel voxel, int dir) {
+	private void AddFace(IVoxModel modelOctree, VoxModelOctree.Voxel voxel, int dir) {
 		// check that the voxel position is registered in _positionToFaces
-		Vector3Int voxelPosition = model.ObjectToVoxelPosition(voxel.Position);
+		Vector3Int voxelPosition = modelOctree.ObjectToVoxelPosition(voxel.Position);
 		if (!_positionToFaces.ContainsKey(voxelPosition)) {
 			_positionToFaces.Add(voxelPosition, new FaceIds());
 		}
@@ -258,11 +271,7 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 		positions.Add(faceCenter + (-tangent1 - tangent2) * halfSize);
 		
 		// create the uv of each corner (assume the face is filled with only one color)
-		// int colorId = voxel.Value - 1;
-		// Vector2 uv = new Vector2(colorId % 16, (int)((float)colorId / 16));
-		// uv += Vector2.one * 0.5f;
-		// uv /= 16;
-		Vector2[] uvs = CreateFaceUVs(model, voxel, positions);
+		Vector2[] uvs = CreateFaceUVs(modelOctree, voxel, positions);
 
 		// add the normals and uv coords of the 4 vertices of the face
 		for (int i = 0; i<positions.Count; i++) {
@@ -281,7 +290,7 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 		}
 	}
 
-	private Vector2[] CreateFaceUVs( VoxModel model, VoxModel.Voxel voxel, List<Vector3> positions)
+	private Vector2[] CreateFaceUVs( IVoxModel modelOctree, VoxModelOctree.Voxel voxel, List<Vector3> positions)
 	{
 		switch (uvMapping)
 		{
@@ -293,10 +302,10 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 				return new Vector2[] { uvPal, uvPal, uvPal, uvPal};
 			
 			case UVMappingStrategy.ProjectionXZ:
-				Vector3Int positionVox = model.ObjectToVoxelPosition(voxel.Position);
+				Vector3Int positionVox = modelOctree.ObjectToVoxelPosition(voxel.Position);
 				Vector2 uvProj = new Vector2( 
-					(float)positionVox.x / model.BoundingBox.x,
-					(float)positionVox.z / model.BoundingBox.z);
+					(float)positionVox.x / modelOctree.BoundingBox.x,
+					(float)positionVox.z / modelOctree.BoundingBox.z);
 				return new Vector2[] { uvProj, uvProj, uvProj, uvProj};
 
 			case UVMappingStrategy.UseFullTexture:
@@ -316,12 +325,12 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 	/// <summary>
 	/// Remove the face of a voxel from a specified direction
 	/// </summary>
-	/// <param name="model">The model of the voxel</param>
+	/// <param name="modelOctree">The model of the voxel</param>
 	/// <param name="voxel">A voxel</param>
 	/// <param name="dir">The index of the direction, between 0 and 5(included)</param>
-	private void RemoveFace(VoxModel model, VoxModel.Voxel voxel, int dir) {
+	private void RemoveFace(IVoxModel modelOctree, VoxModelOctree.Voxel voxel, int dir) {
 		// check that the voxel position is registered in _positionToFaces, which means it may have faces
-		Vector3Int voxelPosition = model.ObjectToVoxelPosition(voxel.Position);
+		Vector3Int voxelPosition = modelOctree.ObjectToVoxelPosition(voxel.Position);
 		if (!_positionToFaces.ContainsKey(voxelPosition)) {
 			return;
 		}

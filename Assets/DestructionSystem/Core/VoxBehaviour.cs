@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace DestructionSystem {
 /// <summary>
@@ -14,7 +15,7 @@ public class VoxBehaviour : MonoBehaviour {
 	private static readonly HashSet<VoxBehaviour> RegisteredVoxBehaviour = new HashSet<VoxBehaviour>();
 
 	
-	[SerializeField] public VoxModel model;
+	[SerializeField] public VoxModelOctree model;
 	[SerializeField] public VoxBuilderCube builder;
 	
 	private MeshFilter _meshComponent;
@@ -41,9 +42,14 @@ public class VoxBehaviour : MonoBehaviour {
 	private void LateUpdate() {
 		// when the current thread is done updating the model, display the new mesh
 		if (_runningThread?.IsAlive == false) {
-			Mesh mesh = _meshComponent.mesh;
-			builder.UpdateMesh(mesh);
-			SetMesh(mesh);
+			// Mesh mesh = _meshComponent.mesh;
+			// builder.UpdateMesh(mesh);
+			// SetMesh(mesh);
+			builder.UpdateMesh(_meshComponent.mesh);
+			if ( _meshCollider != null )
+			{
+				_meshCollider.sharedMesh = _meshComponent.mesh;
+			}
 			_runningThread = null;
 		}
 		
@@ -112,7 +118,7 @@ public class VoxBehaviour : MonoBehaviour {
 	private void ScheduleModelUpdate(List<Vector3> voxelPositions, byte value) {
 		System.Threading.Thread thread = new System.Threading.Thread(() => {
 			Vector3 cornerHigh = model.VoxelToObjectPosition(Vector3Int.zero);
-			Vector3 cornerLow = model.VoxelToObjectPosition(Vector3Int.one * model.SizeInVoxels);
+			Vector3 cornerLow = model.VoxelToObjectPosition(model.BoundingBox);
 			
 			foreach (Vector3 voxelPosition in voxelPositions) {
 				model.Set(voxelPosition, value);

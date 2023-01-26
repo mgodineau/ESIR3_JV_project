@@ -47,23 +47,21 @@ public class VoxImporter : ScriptedImporter
 		foreach( VoxReader.Interfaces.IModel rawModel in file.Models) {
 			
 			
-			VoxModel model = ScriptableObject.CreateInstance<VoxModel>();
-			model.SetSize( ConvertVector3(rawModel.Size), voxelSize );
-			model.content = "des trucs et des machins";
-
+			VoxModelOctree modelOctree = ScriptableObject.CreateInstance<VoxModelOctree>();
+			modelOctree.SetSize( ConvertVector3(rawModel.Size), voxelSize );
+			
 			foreach( Voxel voxel in rawModel.Voxels ) {
-				model.Set(
-					model.VoxelToObjectPosition(ConvertVector3(voxel.Position)),
+				modelOctree.Set(ConvertVector3(voxel.Position),
 					(byte)voxel.ColorIndex
 				);
 			}
 			
-			model.name = filename + "_model_" + rawModel.Id;
-			ctx.AddObjectToAsset("model_" + rawModel.Id, model);
-			behaviour.model = model;
+			modelOctree.name = filename + "_model_" + rawModel.Id;
+			ctx.AddObjectToAsset("model_" + rawModel.Id, modelOctree);
+			behaviour.model = modelOctree;
 			
 			VoxBuilderCube builder = ScriptableObject.CreateInstance<VoxBuilderCube>();
-			builder.RefreshEntireModel(model);
+			builder.RefreshEntireModel(modelOctree);
 			builder.name = filename + "_builder_" + rawModel.Id;
 			ctx.AddObjectToAsset("builder_"  +rawModel.Id, builder);
 			behaviour.builder = builder;

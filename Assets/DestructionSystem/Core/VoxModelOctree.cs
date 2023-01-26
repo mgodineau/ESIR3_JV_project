@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace DestructionSystem {
-public class VoxModel : ScriptableObject, ISerializationCallbackReceiver
+public class VoxModelOctree : ScriptableObject, IVoxModel, ISerializationCallbackReceiver
 {
 	private VoxOctree _root;
 	[SerializeField] private List<SerializableVoxOctree> voxOctreeSerialized;
@@ -25,7 +25,7 @@ public class VoxModel : ScriptableObject, ISerializationCallbackReceiver
 	[SerializeField] private int sizeInVoxels;
 	public int SizeInVoxels => sizeInVoxels;
 	
-	public VoxModel() {
+	public VoxModelOctree() {
 		voxOctreeSerialized = new List<SerializableVoxOctree>();
 	}
 	
@@ -44,6 +44,11 @@ public class VoxModel : ScriptableObject, ISerializationCallbackReceiver
 		_root = new VoxOctreeLeaf();
 	}
 	
+	
+	
+	public void Set( Vector3Int voxelPosition, byte value ) {
+		Set( VoxelToObjectPosition(voxelPosition), value );
+	}
 	
 	public void Set( Vector3 objectPosition, byte value ) {
 		if ( depth != 0 && _root is VoxOctreeLeaf )
@@ -111,24 +116,19 @@ public class VoxModel : ScriptableObject, ISerializationCallbackReceiver
 	
 	public LinkedList<Voxel> GetVoxels() {
 		return GetVoxelsBetween( NormalizedToObjectPosition(Vector3.zero), NormalizedToObjectPosition(Vector3.one) );
-		// LinkedList<Voxel> voxels = new LinkedList<Voxel>();
-		//
-		// float objectSize = sizeInVoxels * _voxelSize;
-		// root.FillVoxelCollection( voxels, NormalizedToObjectPosition(Vector3.one * 0.5f), objectSize, _depth);
-		// return voxels;
 	}
 
 
-	public LinkedList<Voxel> GetVoxelsBetween(Vector3Int cornerLow, Vector3Int cornerHight, bool includeEmpty = false) {
-		return GetVoxelsBetween(VoxelToObjectPosition(cornerLow), VoxelToObjectPosition(cornerHight), includeEmpty);
+	public LinkedList<Voxel> GetVoxelsBetween(Vector3Int cornerLow, Vector3Int cornerHigh, bool includeEmpty = false) {
+		return GetVoxelsBetween(VoxelToObjectPosition(cornerLow), VoxelToObjectPosition(cornerHigh), includeEmpty);
 	}
 
-	public LinkedList<Voxel> GetVoxelsBetween(Vector3 cornerLow, Vector3 cornerHight, bool includeEmpty = false) {
+	public LinkedList<Voxel> GetVoxelsBetween(Vector3 cornerLow, Vector3 cornerHigh, bool includeEmpty = false) {
 		
 		LinkedList<Voxel> voxels = new LinkedList<Voxel>();
 		if (_root != null)
 		{
-			_root.GetVoxelsBetween(voxels, cornerLow, cornerHight, NormalizedToObjectPosition(Vector3.one * 0.5f),
+			_root.GetVoxelsBetween(voxels, cornerLow, cornerHigh, NormalizedToObjectPosition(Vector3.one * 0.5f),
 				depth, voxelSize * sizeInVoxels, includeEmpty);
 		}
 
