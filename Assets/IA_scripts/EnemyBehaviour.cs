@@ -10,6 +10,10 @@ public class EnemyBehaviour : MonoBehaviour
     public Transform player;
     public LayerMask isGround, isPlayer, isWall;
 
+    //Stats
+    private int health = 100;
+    private int dmg = 10;
+
     //States
     public bool isPatroling = true;
     public bool isChasing = false;
@@ -57,16 +61,33 @@ public class EnemyBehaviour : MonoBehaviour
         //Chasing state
         else if (isChasing)
         {
-            //Chack attack range
+            //Check attack range
             playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, isPlayer);
             if (playerInAttackRange)
             {
                 isAttacking = true; 
                 isChasing = false;
             }
+            
+            //player escape
+            if ((transform.position - player.position).magnitude > sightRange)
+            {
+                isPatroling = true;
+                isChasing = false;
+            }
         }
 
         //Attacking state
+        else if (isAttacking)
+        {
+            //Check attack range
+            playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, isPlayer);
+            if(!playerInAttackRange)    //out of range
+            {
+                isChasing = true;
+                isAttacking = false;
+            }
+        }
 
         if (isPatroling) Patroling();
         else if (isChasing) ChasePlayer();
@@ -146,6 +167,8 @@ public class EnemyBehaviour : MonoBehaviour
         {
             ///Attack code here
             Debug.Log("PAF !");
+            player.gameObject.TryGetComponent(out Player_hp playerComponent);
+            playerComponent.TakeDammage(dmg);
             ///End of attack code
 
             alreadyAttacked = true;
@@ -155,5 +178,16 @@ public class EnemyBehaviour : MonoBehaviour
     private void ResetAttack()
     {
         alreadyAttacked = false;
+    }
+
+    public void TakeDammage(int dmg)
+    {
+        health -= dmg;
+        if (health <= 0) Invoke(nameof(DestroyEnemy), 0.5f);
+    }
+
+    private void DestroyEnemy()
+    {
+        Destroy(gameObject);
     }
 }
