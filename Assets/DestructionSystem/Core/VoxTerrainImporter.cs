@@ -21,7 +21,8 @@ namespace DestructionSystem
 		[SerializeField] private float heightOffset = 5;
 
 		[SerializeField] private float voxelSize = 1;
-
+		[SerializeField] private int metaVoxelSize = 4;
+		
 		// should the prefab has a collider ?
 		[SerializeField] private bool addCollider = true;
 
@@ -53,8 +54,13 @@ namespace DestructionSystem
 			behaviour.model = model;
 
 
-			VoxBuilderCube builder = ScriptableObject.CreateInstance<VoxBuilderCube>();
-			builder.uvMapping = VoxBuilderCube.UVMappingStrategy.ProjectionXZ;
+			// VoxBuilderCube rawBuilder = new VoxBuilderCube {
+			// 	uvMapping = VoxBuilderCube.UVMappingStrategy.ProjectionXZ
+			// };	
+
+			SerializableVoxBuilder builder = ScriptableObject.CreateInstance<SerializableVoxBuilder>();
+			builder.Init( new VoxBuilderMarchingCube(metaVoxelSize) );
+			
 			builder.RefreshEntireModel(model);
 			builder.name = filename + "_builder";
 			ctx.AddObjectToAsset("builder", builder);

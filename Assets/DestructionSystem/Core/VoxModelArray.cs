@@ -40,15 +40,10 @@ namespace DestructionSystem
 		
 		public void Set(Vector3Int voxelPosition, byte value)
 		{
-			for (int i=0; i<3; i++)
-			{
-				if ( voxelPosition[i] < 0 || voxelPosition[i] >= BoundingBox[i] )
-				{
-					return;
-				}
+			if ( data.AreIndexesValid(voxelPosition) ) {
+				data[voxelPosition] = value;
 			}
 			
-			data[voxelPosition] = value;
 		}
 		
 		public void Set(Vector3 objectPosition, byte value)
@@ -58,14 +53,9 @@ namespace DestructionSystem
 
 		public byte Get(Vector3Int voxelPosition)
 		{
-			for (int i=0; i<3; i++)
-			{
-				if ( voxelPosition[i] < 0 || voxelPosition[i] >= BoundingBox[i] )
-				{
-					return 0;
-				}
-			}
-			return data[voxelPosition.x, voxelPosition.y, voxelPosition.z];
+			return data.AreIndexesValid(voxelPosition) 
+				? data[voxelPosition.x, voxelPosition.y, voxelPosition.z] 
+				: (byte)0;
 		}
 
 		public byte Get(Vector3 objectPosition)

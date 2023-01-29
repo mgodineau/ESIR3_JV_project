@@ -60,7 +60,9 @@ public class VoxImporter : ScriptedImporter
 			ctx.AddObjectToAsset("model_" + rawModel.Id, modelOctree);
 			behaviour.model = modelOctree;
 			
-			VoxBuilderCube builder = ScriptableObject.CreateInstance<VoxBuilderCube>();
+			SerializableVoxBuilder builder = ScriptableObject.CreateInstance<SerializableVoxBuilder>();
+			builder.Init( new VoxBuilderCube() );
+			
 			builder.RefreshEntireModel(modelOctree);
 			builder.name = filename + "_builder_" + rawModel.Id;
 			ctx.AddObjectToAsset("builder_"  +rawModel.Id, builder);

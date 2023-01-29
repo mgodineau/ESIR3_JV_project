@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.AssetImporters;
 using UnityEngine;
 
 namespace DestructionSystem.Utils
@@ -28,6 +27,18 @@ namespace DestructionSystem.Utils
 			data = Enumerable.Repeat((byte)0, dim.x * dim.y * dim.z).ToList();
 		}
 
+
+		public bool AreIndexesValid( Vector3Int indexes ) {
+			for ( int i=0; i<3; i++ ) {
+				if (indexes[i] < 0 || indexes[i] >= Dim[i]) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+		
+		
 		public byte this[Vector3Int indexes] {
 			get { return this[indexes.x, indexes.y, indexes.z]; }
 			set { this[indexes.x, indexes.y, indexes.z] = value; }

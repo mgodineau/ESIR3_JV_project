@@ -16,7 +16,7 @@ public class VoxBehaviour : MonoBehaviour {
 
 	
 	[SerializeField] public VoxModelOctree model;
-	[SerializeField] public VoxBuilderCube builder;
+	[SerializeField] public SerializableVoxBuilder builder;
 	
 	private MeshFilter _meshComponent;
 	private MeshCollider _meshCollider;

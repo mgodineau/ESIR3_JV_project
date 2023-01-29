@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace DestructionSystem {
-[CreateAssetMenu(menuName = "ScriptableObjects/VoxBuilderCube")]
-public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
+
+[Serializable]
+public class VoxBuilderCube : IVoxBuilder, ISerializationCallbackReceiver {
 	
 	[Serializable]
 	private class MonitoredVertexList : Utils.MonitoredList<VertexLayout> {}
@@ -21,7 +20,6 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 	
 	// lists containing the data to build the mesh with
 	[SerializeField] private List<int> triangles;
-	// [SerializeField] private List<VertexLayout> vertices;
 	[SerializeReference] private MonitoredVertexList vertices;
 	
 	// list of faces, on which faces are in the same order as in the previous lists
@@ -56,9 +54,14 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 	}
 
 	public void OnAfterDeserialize() {
+		if ( _positionToFaces.Count != 0 ) {
+			return;
+		}
+		
 		for (int i = 0; i < positionToFacesSerializedKeys.Count; i++) {
 			_positionToFaces.Add(positionToFacesSerializedKeys[i], positionToFacesSerializedValues[i]);
 		}
+		
 
 		positionToFacesSerializedKeys.Clear();
 		positionToFacesSerializedValues.Clear();
@@ -105,7 +108,7 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 			
 			mesh.SetVertexBufferData(vertices, startIndex, startIndex, currentChunkSize, 0, flags);
 		}
-		// vertices.ClearUpdatedChunks();
+		vertices.ClearUpdatedChunks();
 
 		int previousIndexCount = (int)mesh.GetIndexCount(0);
 		mesh.SetIndexBufferParams( triangles.Count, IndexFormat.UInt32 );
@@ -125,11 +128,11 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 	/// <summary>
 	/// Clear the mesh data and rebuilt it according to the specified model
 	/// </summary>
-	/// <param name="modelOctree">The model to build the mesh with</param>
-	public void RefreshEntireModel(IVoxModel modelOctree) {
+	/// <param name="model">The model to build the mesh with</param>
+	public void RefreshEntireModel(IVoxModel model) {
 		ClearMesh();
 
-		LinkedList<VoxModelOctree.Voxel> voxels = modelOctree.GetVoxels();
+		LinkedList<VoxModelOctree.Voxel> voxels = model.GetVoxels();
 
 		foreach (VoxModelOctree.Voxel voxel in voxels) {
 			for (int dir = 0; dir < 6; dir++) {
@@ -137,8 +140,8 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 				int axisSign = (dir % 2 == 0) ? 1 : -1;
 				Vector3 nextPosition = voxel.Position;
 				nextPosition[axis] += axisSign * voxel.Size;
-				if (modelOctree.Get(nextPosition) == 0) {
-					AddFace(modelOctree, voxel, dir);
+				if (model.Get(nextPosition) == 0) {
+					AddFace(model, voxel, dir);
 				}
 			}
 		}
@@ -148,21 +151,21 @@ public class VoxBuilderCube : ScriptableObject, ISerializationCallbackReceiver {
 	/// <summary>
 	/// Update only a small part of the mesh, according to a specified model. The updated part is a rectangular cuboid.
 	/// </summary>
-	/// <param name="modelOctree">The model to read the updates from</param>
+	/// <param name="model">The model to read the updates from</param>
 	/// <param name="cornerLow">The lower corner of the area to update, in object coordinates.</param>
 	/// <param name="cornerHigh">The upper corner of the area to update, in object coordinates.</param>
-	public void RefreshRegion(IVoxModel modelOctree, Vector3 cornerLow, Vector3 cornerHigh) {
-		LinkedList<VoxModelOctree.Voxel> voxels = modelOctree.GetVoxelsBetween(cornerLow, cornerHigh, true);
+	public void RefreshRegion(IVoxModel model, Vector3 cornerLow, Vector3 cornerHigh) {
+		LinkedList<VoxModelOctree.Voxel> voxels = model.GetVoxelsBetween(cornerLow, cornerHigh, true);
 
 		foreach (VoxModelOctree.Voxel voxel in voxels)
 		{
 			if (voxel.Value == 0)
 			{
-				RemoveVoxelFaces(modelOctree, voxel);
+				RemoveVoxelFaces(model, voxel);
 			}
 			else
 			{
-				AddVoxelFaces(modelOctree, voxel);
+				AddVoxelFaces(model, voxel);
 			}
 		}
 	}
