@@ -12,7 +12,7 @@ public class Projectile : MonoBehaviour
     { return damage; }
 
     private float time_spawned;
-    private float life_span = 2f;
+    private float life_span = 5f;
 
     void Start()
     {

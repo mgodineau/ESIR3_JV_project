@@ -16,8 +16,8 @@ public class AnimationManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        var y = Input.GetAxis("Vertical");
-        var x = Input.GetAxis("Horizontal");
+        var y = Input.GetAxis("Vertical"); //Correspond à z et s
+        var x = Input.GetAxis("Horizontal"); // q et d
 
         Move(y, x);
     }

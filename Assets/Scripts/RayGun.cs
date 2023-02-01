@@ -15,7 +15,7 @@ public class RayGun : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+   /* void Update()
     {
         if(Input.GetKeyDown(KeyCode.Mouse0))
         {
@@ -35,5 +35,5 @@ public class RayGun : MonoBehaviour
             }
         }
 
-    }
+    }*/
 }
