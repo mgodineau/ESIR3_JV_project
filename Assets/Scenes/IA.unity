@@ -138,7 +138,7 @@ GameObject:
   - component: {fileID: 16755271}
   m_Layer: 8
   m_Name: Enemy 1
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -166,13 +166,18 @@ MonoBehaviour:
   isWall:
     serializedVersion: 2
     m_Bits: 512
+  group: 4
+  health: 100
+  dmg: 10
+  communicationRange: 10
   isPatroling: 1
   isChasing: 0
   isAttacking: 0
+  Alerted: 0
   walkPoint: {x: 0, y: 0, z: 0}
   walkPointRange: 10
   timeBetweenAttacks: 1
-  sightRange: 15
+  sightRange: 10
   attackRange: 1
 --- !u!195 &16755272
 NavMeshAgent:
@@ -254,7 +259,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 16755270}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 13.46, y: 1.92, z: -9.36}
+  m_LocalPosition: {x: -3.59, y: 1.92, z: 4.75}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -276,7 +281,7 @@ GameObject:
   - component: {fileID: 206178269}
   m_Layer: 8
   m_Name: Enemy 3
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -304,13 +309,18 @@ MonoBehaviour:
   isWall:
     serializedVersion: 2
     m_Bits: 512
+  group: 4
+  health: 100
+  dmg: 10
+  communicationRange: 10
   isPatroling: 1
   isChasing: 0
   isAttacking: 0
+  Alerted: 0
   walkPoint: {x: 0, y: 0, z: 0}
   walkPointRange: 10
   timeBetweenAttacks: 1
-  sightRange: 15
+  sightRange: 10
   attackRange: 1
 --- !u!195 &206178270
 NavMeshAgent:
@@ -392,7 +402,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 206178268}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 14.1, y: 1.92, z: 15.82}
+  m_LocalPosition: {x: 19.23, y: 1.92, z: 18.71}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -520,7 +530,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 325134377}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.8514209, y: -53.44887, z: -9.675434}
+  m_LocalPosition: {x: 40.2, y: -53.44887, z: -9.675434}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -742,7 +752,7 @@ GameObject:
   - component: {fileID: 535540851}
   m_Layer: 8
   m_Name: Enemy 5
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -770,13 +780,18 @@ MonoBehaviour:
   isWall:
     serializedVersion: 2
     m_Bits: 512
+  group: 4
+  health: 100
+  dmg: 10
+  communicationRange: 10
   isPatroling: 1
   isChasing: 0
   isAttacking: 0
+  Alerted: 0
   walkPoint: {x: 0, y: 0, z: 0}
   walkPointRange: 10
   timeBetweenAttacks: 1
-  sightRange: 15
+  sightRange: 10
   attackRange: 1
 --- !u!195 &535540852
 NavMeshAgent:
@@ -858,7 +873,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 535540850}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -14.6, y: 1.92, z: -16.15}
+  m_LocalPosition: {x: -5.42, y: 1.92, z: 0.76}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1074,7 +1089,7 @@ GameObject:
   - component: {fileID: 1274405890}
   m_Layer: 8
   m_Name: Enemy 4
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1102,13 +1117,18 @@ MonoBehaviour:
   isWall:
     serializedVersion: 2
     m_Bits: 512
+  group: 4
+  health: 100
+  dmg: 10
+  communicationRange: 10
   isPatroling: 1
   isChasing: 0
   isAttacking: 0
+  Alerted: 0
   walkPoint: {x: 0, y: 0, z: 0}
   walkPointRange: 10
   timeBetweenAttacks: 1
-  sightRange: 15
+  sightRange: 10
   attackRange: 1
 --- !u!195 &1274405891
 NavMeshAgent:
@@ -1190,7 +1210,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1274405889}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.19, y: 1.92, z: -1.12}
+  m_LocalPosition: {x: 8.73, y: 1.92, z: -8.26}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1400,7 +1420,7 @@ Transform:
   m_GameObject: {fileID: 1439092909}
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
   m_LocalPosition: {x: -13.32, y: 55.94887, z: 5.545434}
-  m_LocalScale: {x: 14.5606365, y: 5, z: 1}
+  m_LocalScale: {x: 6.1342506, y: 5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 325134378}
@@ -1591,7 +1611,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1459316665}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.92, z: 0}
+  m_LocalPosition: {x: -13.17, y: 1.92, z: 13.34}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1611,7 +1631,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   health: 100
-  regen: 20
   isDead: 0
 --- !u!1 &1690472541
 GameObject:
@@ -1725,7 +1744,7 @@ GameObject:
   - component: {fileID: 2031297528}
   m_Layer: 8
   m_Name: Enemy 2
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1753,13 +1772,18 @@ MonoBehaviour:
   isWall:
     serializedVersion: 2
     m_Bits: 512
+  group: 4
+  health: 100
+  dmg: 10
+  communicationRange: 10
   isPatroling: 1
   isChasing: 0
   isAttacking: 0
+  Alerted: 0
   walkPoint: {x: 0, y: 0, z: 0}
   walkPointRange: 10
   timeBetweenAttacks: 1
-  sightRange: 15
+  sightRange: 10
   attackRange: 1
 --- !u!195 &2031297529
 NavMeshAgent:
@@ -1841,7 +1865,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2031297527}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -11.79, y: 1.92, z: 4.6}
+  m_LocalPosition: {x: -8.41, y: 1.92, z: 7.57}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

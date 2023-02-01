@@ -10,14 +10,22 @@ public class EnemyBehaviour : MonoBehaviour
     public Transform player;
     public LayerMask isGround, isPlayer, isWall;
 
+    private GameObject[] nearestEnemies;
+    private int enemyAdd;
+    public int group = 4;
+    private Transform alertSender;
+
     //Stats
-    private int health = 100;
-    private int dmg = 10;
+    public int health = 100;
+    public int dmg = 10;
+    public int communicationRange = 10;
+
 
     //States
     public bool isPatroling = true;
     public bool isChasing = false;
     public bool isAttacking = false;
+    public bool Alerted = false;
 
     //Patroling
     public Vector3 walkPoint;           //Point to go while walking
@@ -54,7 +62,9 @@ public class EnemyBehaviour : MonoBehaviour
             if (playerInSightRange)
             {
                 isChasing = true;
-                isPatroling = false;        
+                isPatroling = false;
+                //Send Alert
+                //sendAlert();
             }
         }
 
@@ -68,7 +78,7 @@ public class EnemyBehaviour : MonoBehaviour
                 isAttacking = true; 
                 isChasing = false;
             }
-            
+
             //player escape
             if ((transform.position - player.position).magnitude > sightRange)
             {
@@ -89,9 +99,12 @@ public class EnemyBehaviour : MonoBehaviour
             }
         }
 
+
         if (isPatroling) Patroling();
         else if (isChasing) ChasePlayer();
         else if (isAttacking) AttackPlayer();
+
+        //else if (Alerted) ChaseAlert();
     }
 
     private bool inSigth()
@@ -153,7 +166,7 @@ public class EnemyBehaviour : MonoBehaviour
     private void ChasePlayer()
     {
         agent.SetDestination(player.position);
-        Debug.Log("Found it !!!!!");
+        //Debug.Log("Found it !!!!!");
     }
 
     private void AttackPlayer()
@@ -189,5 +202,89 @@ public class EnemyBehaviour : MonoBehaviour
     private void DestroyEnemy()
     {
         Destroy(gameObject);
+    }
+
+
+    /// <summary>
+    /// TEST ACTION GROUP
+    /// </summary>
+    private void FindClosestEnemy()
+    {
+        GameObject[] gos;
+
+        gos = GameObject.FindGameObjectsWithTag("Enemy");
+        //Debug.Log(gos.Length);
+        Vector3 position = transform.position;
+        enemyAdd = 0;
+
+        foreach (GameObject go in gos)
+        {
+                if (enemyAdd > group-1) break;
+
+                go.TryGetComponent(out EnemyBehaviour enemyComponent);
+                bool alertState = enemyComponent.Alerted;
+
+                if (!alertState)
+                {
+                    Vector3 diff = go.transform.position - position;
+                    if (diff.magnitude < communicationRange)
+                    {
+                        nearestEnemies[enemyAdd] = go;
+                        enemyAdd++;
+                    }
+                }
+        }
+    }
+
+    //Send alert signal to nearest enemies to chase Player
+    private void sendAlert()
+    {
+        nearestEnemies = new GameObject[group];
+        FindClosestEnemy();
+        for (int e = 0; e < enemyAdd; e++)
+        {
+            nearestEnemies[enemyAdd].TryGetComponent(out EnemyBehaviour enemyComponent);
+            enemyComponent.setAlert(transform);
+        }        
+    }
+
+    //set Alert state & alert sender (enemy who chase player)
+    public void setAlert(Transform sender)
+    {
+        if (isPatroling)
+        {
+            Alerted = true;
+            isPatroling = false;
+            alertSender = sender;
+        }
+    }
+
+    //Chase alert sender unitil find player
+    private void ChaseAlert()
+    {
+        agent.SetDestination(alertSender.position);
+
+        playerInSightRange = inSigth();
+        if (playerInSightRange)
+        {
+            isChasing = true;
+            Alerted = false;
+        }
+
+        //solution if alertSender stop chasing
+        Vector3 diff = transform.position - alertSender.position;
+        if (diff.magnitude < 1f)
+        {
+            isPatroling = true;
+            Alerted = false;
+        }
+    }
+
+    //global alert function
+    private void inAlert()
+    {
+        FindClosestEnemy();
+        sendAlert();
+
     }
 }
