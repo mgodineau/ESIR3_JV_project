@@ -140,7 +140,6 @@ public class VoxBuilderMarchingCube : IVoxBuilder {
 		vertices.ClearUpdatedChunks();
 
 		
-		//TODO update indexes by chunks
 		mesh.SetIndexBufferParams( triangles.Count, IndexFormat.UInt32 );
 		foreach (KeyValuePair<int, int> chunkLocationAndSize in triangles.GetUpdatedChunks()) {
 			int startIndex = chunkLocationAndSize.Key * triangles.chunkSize;
@@ -158,8 +157,8 @@ public class VoxBuilderMarchingCube : IVoxBuilder {
 		mesh.subMeshCount = 1;
 		mesh.SetSubMesh(0, new SubMeshDescriptor(0, triangles.Count), flags);
 		
-		mesh.MarkModified();
 		mesh.RecalculateNormals();
+		mesh.MarkModified();
 	}
 	
 	
@@ -361,7 +360,7 @@ public class VoxBuilderMarchingCube : IVoxBuilder {
 
 
 	int AddVertex( IVoxModel model, Vector3Int metaPos, int edgeDir ) {
-		
+
 		if ( vertexIndexes[edgeDir][metaPos] == -1 ) {
 
 			vertexIndexes[edgeDir][metaPos] = vertices.Count;
@@ -371,14 +370,38 @@ public class VoxBuilderMarchingCube : IVoxBuilder {
 		
 		int vertexId = vertexIndexes[edgeDir][metaPos];
 		
-		Vector3 offset = Vector3.zero;
-		offset[edgeDir] = 0.5f;
 		
+		Vector3 offset = Vector3.zero;
+		offset[edgeDir] = GetVertexRelativeLocation(metaPos, edgeDir);
+
 		Vector3 vertexPosition = model.VoxelToObjectPosition(metaPos * metaVoxelSize) + offset * metaVoxelSize * model.VoxelSize;
-		VertexLayout vertex = new VertexLayout() { position = vertexPosition, normal = Vector3.up, uv=Vector2.zero};
+		Vector3 vertexPositionVoxel = model.ObjectToVoxelPosition(vertexPosition);
+		Vector2 uv = new Vector2( vertexPositionVoxel.x / model.BoundingBox.x, vertexPositionVoxel.z  / model.BoundingBox.z);
+		
+		VertexLayout vertex = new VertexLayout() { position = vertexPosition, normal = Vector3.up, uv=uv};
+		
 		vertices[vertexId] = vertex;
 		
 		return vertexId;
+	}
+
+
+	private float GetVertexRelativeLocation( Vector3Int metaPos, int edgeDir ) {
+		Vector3Int offset = Vector3Int.zero;
+		offset[edgeDir] = 1;
+		
+		metaPos -= Vector3Int.one;
+		int metaVoxValueA = metaVoxels.AreIndexesValid(metaPos) ? metaVoxels[metaPos] : 0;
+		int metaVoxValueB = metaVoxels.AreIndexesValid(metaPos+offset) ? metaVoxels[metaPos + offset] : 0;
+		
+		float ratioA = (float)metaVoxValueA / Mathf.Pow(metaVoxelSize, 3);
+		float ratioB = (float)metaVoxValueB / Mathf.Pow(metaVoxelSize, 3);
+
+
+		float ratio = ratioB == 0 ? ratioA : 1 - ratioB;
+		
+		
+		return ratio;
 	}
 
 

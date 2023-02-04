@@ -583,7 +583,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 89cb22fcae74faf159a2ad8945054af8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  radius: 15
+  radius: 10
 --- !u!135 &1240217752
 SphereCollider:
   m_ObjectHideFlags: 0

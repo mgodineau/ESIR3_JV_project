@@ -11,8 +11,8 @@ ScriptedImporter:
   heightmap: {fileID: 2800000, guid: 472bf6c95baf2015eaf1dfb923905aa8, type: 3}
   material: {fileID: 2100000, guid: 794f265d7e3f51051b4da3a29cdf63af, type: 2}
   terrainWidth: 100
-  terrainHeight: 30
+  terrainHeight: 20
   heightOffset: 5
-  voxelSize: 0.5
-  metaVoxelSize: 4
+  voxelSize: 1
+  metaVoxelSize: 2
   addCollider: 1
