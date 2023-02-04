@@ -1,0 +1,12 @@
+fileFormatVersion: 2
+guid: cc04df3a377390b4abba6fb6d318cf36
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: f5e8ceca00fa4ba4c81df1a2625576ab, type: 3}
+  voxelSize: 0.25
+  addCollider: 1

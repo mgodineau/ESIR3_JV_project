@@ -13,6 +13,7 @@ public float groundDrag;
 public float jumpForce;
 public float jumpCooldown;
 public float airMultiplier;
+public float gravity;
 bool readyToJump;
 
 [Header("KeyBindinds")]
@@ -21,7 +22,7 @@ public KeyCode jumpKey = KeyCode.Space;
 [Header("Ground Check")]
 public float playerHeight;
 public LayerMask whatIsGround;
-bool grounded;
+public bool grounded;
 
 public Transform orientation;
 
@@ -82,14 +83,16 @@ private void MovePlayer()
 {
 	//calculate movement direction
 	moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
+	//this.transform.rotation = Quaternion.LookRotation(moveDirection);
 
 	//on ground
 	if(grounded)
-		rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force); 
+		rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.VelocityChange); 
 	
 	//in air
 	else if (!grounded)
-			rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force); 
+			rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.VelocityChange); 
+			rb.AddForce(Vector3.down * gravity, ForceMode.Acceleration); 
 }
 
 private void SpeedControl()
