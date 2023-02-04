@@ -118,7 +118,7 @@ public class VoxBuilderMarchingCube : IVoxBuilder {
 		return mesh;
 	}
 	
-	// TODO refactor
+	
 	public void UpdateMesh(Mesh mesh) {
 		MeshUpdateFlags flags =
 			MeshUpdateFlags.DontNotifyMeshUsers

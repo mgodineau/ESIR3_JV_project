@@ -728,6 +728,10 @@ PrefabInstance:
       propertyPath: near clip plane
       value: 0.01
       objectReference: {fileID: 0}
+    - target: {fileID: 114103969153859672, guid: 11aaea5348574644a9eb4f4504fcce3f, type: 3}
+      propertyPath: currentZoom
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 136877096903737240, guid: 11aaea5348574644a9eb4f4504fcce3f, type: 3}
       propertyPath: m_Enabled
       value: 1
@@ -1314,7 +1318,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gun_end: {fileID: 1668175081}
-  damage: 1
 --- !u!114 &1576586612
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3350,7 +3353,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gun_end: {fileID: 1744488887}
-  damage: 1
 --- !u!1 &4876036750793585728
 GameObject:
   m_ObjectHideFlags: 0
@@ -3380,7 +3382,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gun_end: {fileID: 296617822}
-  damage: 1
 --- !u!1 &4876036750793585730
 GameObject:
   m_ObjectHideFlags: 0

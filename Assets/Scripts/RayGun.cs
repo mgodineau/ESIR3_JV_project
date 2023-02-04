@@ -7,7 +7,7 @@ public class RayGun : MonoBehaviour
 
 
     public Transform gun_end;
-    [SerializeField] private int damage = 1;
+    // [SerializeField] private int damage = 1;
     // Start is called before the first frame update
     void Start()
     {
