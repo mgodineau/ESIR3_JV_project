@@ -10,7 +10,7 @@ namespace DestructionSystem
 		
 		
 		
-		public Vector3Int BoundingBox => data.Dim;
+		public Vector3Int BoundingBox => _data.Dim;
 		
 		[SerializeField] private float voxelSize;
 		public float VoxelSize => voxelSize;
@@ -18,19 +18,20 @@ namespace DestructionSystem
 		[SerializeField] private Vector3 objectCenterOffset;
 		
 		
-		[SerializeField] Utils.Serializable3DByteArray data;
+		
+		[SerializeField]private Utils.Serializable3DByteArray _data;
 		
 		
 		public VoxModelArray()
 		{
-			data = new Utils.Serializable3DByteArray(Vector3Int.zero);
+			_data = new Utils.Serializable3DByteArray(Vector3Int.zero);
 		}
 		
 		public void SetSize(Vector3Int boundingBox, float size = 1)
 		{
 			voxelSize = size;
 
-			data = new Utils.Serializable3DByteArray(boundingBox);
+			_data = new Utils.Serializable3DByteArray(boundingBox);
 			
 			objectCenterOffset = (Vector3)boundingBox * voxelSize * 0.5f;
 			objectCenterOffset.y = 0;
@@ -40,8 +41,8 @@ namespace DestructionSystem
 		
 		public void Set(Vector3Int voxelPosition, byte value)
 		{
-			if ( data.AreIndexesValid(voxelPosition) ) {
-				data[voxelPosition] = value;
+			if ( _data.AreIndexesValid(voxelPosition) ) {
+				_data[voxelPosition] = value;
 			}
 			
 		}
@@ -53,9 +54,9 @@ namespace DestructionSystem
 
 		public byte Get(Vector3Int voxelPosition)
 		{
-			return data.AreIndexesValid(voxelPosition) 
-				? data[voxelPosition.x, voxelPosition.y, voxelPosition.z] 
-				: (byte)0;
+			return (byte)(_data.AreIndexesValid(voxelPosition) 
+				? _data[voxelPosition.x, voxelPosition.y, voxelPosition.z] 
+				: 0);
 		}
 
 		public byte Get(Vector3 objectPosition)

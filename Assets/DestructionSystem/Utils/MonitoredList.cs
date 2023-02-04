@@ -48,7 +48,6 @@ namespace DestructionSystem.Utils
 			set
 			{
 				base[index] = value;
-				
 				RegisterUpdateAt(index);
 			}
 		}
@@ -60,6 +59,13 @@ namespace DestructionSystem.Utils
 		}
 
 
+
+		public new void Clear() {
+			base.Clear();
+			ClearUpdatedChunks();
+		}
+		
+		
 		public void ClearUpdatedChunks()
 		{
 			m_UpdatedChunks.Clear();
