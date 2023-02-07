@@ -1,14 +1,17 @@
 using System.Collections;
 using System.Collections.Generic;
+// using System.Numerics;
 using UnityEngine;
 using UnityEngine.AI;
 
+[RequireComponent(typeof(NavMeshAgent))]
 public class EnemyBehaviour : MonoBehaviour
 {
     //Define objects
-    public NavMeshAgent agent;
-    public Transform player;
-    public LayerMask isGround, isPlayer, isWall;
+    private NavMeshAgent _agent;
+
+    private Transform _player;
+    public LayerMask isPlayer, isWall;
 
     //Stats
     private int health = 100;
@@ -38,17 +41,18 @@ public class EnemyBehaviour : MonoBehaviour
 
     private void Awake()
     {
-        player = GameObject.Find("Player").transform;
-        agent = GetComponent<NavMeshAgent>();
+        _player = GameObject.FindGameObjectWithTag("Player").transform;
+        _agent = GetComponent<NavMeshAgent>();
     }
 
     private void Update()
     {
-        //Patroling state
+		
+	    //Patroling state
         if (isPatroling)
         {
             //Check sight range
-            playerInSightRange = inSigth();
+            playerInSightRange = InSight();
             //Debug.Log("inSightRange" + playerInSightRange);
 
             if (playerInSightRange)
@@ -70,7 +74,7 @@ public class EnemyBehaviour : MonoBehaviour
             }
             
             //player escape
-            if ((transform.position - player.position).magnitude > sightRange)
+            if ((transform.position - _player.position).magnitude > sightRange)
             {
                 isPatroling = true;
                 isChasing = false;
@@ -92,15 +96,16 @@ public class EnemyBehaviour : MonoBehaviour
         if (isPatroling) Patroling();
         else if (isChasing) ChasePlayer();
         else if (isAttacking) AttackPlayer();
+        
     }
 
-    private bool inSigth()
+    private bool InSight()
     {
         playerInSightRange = Physics.CheckSphere(transform.position, sightRange, isPlayer);
         if (playerInSightRange)
         {
             //check walls
-            bool intersect = Physics.Raycast(transform.position, player.position - transform.position, sightRange, isWall);     //Raycast(position, direction, maxdistance, tag)
+            bool intersect = Physics.Raycast(transform.position, _player.position - transform.position, sightRange, isWall);     //Raycast(position, direction, maxdistance, tag)
 
             if (!intersect)
             {
@@ -115,14 +120,12 @@ public class EnemyBehaviour : MonoBehaviour
 
         if (walkPointSet)
         {
-            agent.SetDestination(walkPoint);
-            //Debug.Log("Patroling ZZZZ!");
+            _agent.SetDestination(walkPoint);
         }
-
-        Vector3 distanceToWalkPoint = transform.position - walkPoint;
+		
 
         //Walkpoint reached
-        if (distanceToWalkPoint.magnitude < 1f)
+        if (_agent.remainingDistance <= _agent.stoppingDistance)
         {
             walkPointSet = false;
         }
@@ -142,32 +145,27 @@ public class EnemyBehaviour : MonoBehaviour
         s.transform.position = walkPoint;
         Destroy(s,3);
         */
-
-        // Check walkPoint throught walls and check ground
-        if (Physics.Raycast(walkPoint, -transform.up, 2f, isGround) && !Physics.Raycast(transform.position, walkPoint - transform.position, (walkPoint - transform.position).magnitude, isWall))
-        {
-            walkPointSet = true;
-        }
+        walkPointSet = true;
     }
 
     private void ChasePlayer()
     {
-        agent.SetDestination(player.position);
-        Debug.Log("Found it !!!!!");
+        _agent.SetDestination(_player.position);
+        // Debug.Log("Found it !!!!!");
     }
 
     private void AttackPlayer()
     {
         //Make sure enemy doesn't move
-        agent.SetDestination(transform.position);
+        _agent.SetDestination(transform.position);
 
-        transform.LookAt(player);
+        transform.LookAt(_player);
 
         if (!alreadyAttacked)
         {
             ///Attack code here
-            Debug.Log("PAF !");
-            player.gameObject.TryGetComponent(out Player_hp playerComponent);
+            // Debug.Log("PAF !");
+            _player.gameObject.TryGetComponent(out Player_hp playerComponent);
             playerComponent.TakeDammage(dmg);
             ///End of attack code
 

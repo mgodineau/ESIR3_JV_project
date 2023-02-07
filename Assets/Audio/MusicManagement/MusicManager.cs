@@ -16,8 +16,10 @@ public class MusicManager : MonoBehaviour {
 	[SerializeField] private float transitionDuration = 1.0f;
 	
 	
-	private AudioSource audioSource;
-	private float maxVolume;
+	private AudioSource _audioSource;
+	private float _maxVolume;
+
+	private Coroutine _currentTransitionCoroutine;
 	
 	
 	private void Awake() {
@@ -27,40 +29,45 @@ public class MusicManager : MonoBehaviour {
 		_instance = this;
 		
 		
-		audioSource = GetComponent<AudioSource>();
-		maxVolume = audioSource.volume;
+		_audioSource = GetComponent<AudioSource>();
+		_maxVolume = _audioSource.volume;
 	}
 	
 	
 	public void SetMusic( AudioClip music ) {
-		if ( audioSource.clip != music ) {
-			StartCoroutine(MusicTransition(music, transitionDuration));
+		if ( _audioSource.clip != music ) {
+			if ( _currentTransitionCoroutine != null ) {
+				StopCoroutine(_currentTransitionCoroutine);
+			}
+			
+			_currentTransitionCoroutine = StartCoroutine(MusicTransition(music, transitionDuration));
 		}
 	}
 
 
 	private IEnumerator MusicTransition( AudioClip nextMusic, float transitionDuration = 1.0f ) {
 
+		float startingVolume = _audioSource.volume;
 		float volumeRatio = 1;
-		while (volumeRatio != 0) {
+		while (volumeRatio > 0) {
 			yield return null;
 
-			volumeRatio = Mathf.Max( 0, volumeRatio - Time.deltaTime * 2 / transitionDuration );
-			audioSource.volume = VolumeRatioToRealVolume(volumeRatio);
+			volumeRatio = Mathf.Max(0,volumeRatio - Time.deltaTime * 2 / transitionDuration);
+			_audioSource.volume = VolumeRatioToRealVolume(volumeRatio, startingVolume);
 		}
 
-		audioSource.clip = nextMusic;
-		audioSource.Play();
+		volumeRatio = 0;
+		_audioSource.clip = nextMusic;
+		_audioSource.Play();
 
-		while ( volumeRatio != 1 ) {
+		while ( volumeRatio < 1 ) {
 			yield return null;
-			volumeRatio = Mathf.Min( 1, volumeRatio + Time.deltaTime * 2 / transitionDuration );
-			audioSource.volume = VolumeRatioToRealVolume(volumeRatio);
+			volumeRatio = Mathf.Min(1, volumeRatio + Time.deltaTime * 2 / transitionDuration);
+			_audioSource.volume = VolumeRatioToRealVolume(volumeRatio, _maxVolume);
 		}
-
 	}
 
-	private float VolumeRatioToRealVolume( float ratio ) {
+	private float VolumeRatioToRealVolume( float ratio, float maxVolume ) {
 		return (Mathf.Cos((ratio - 1) * Mathf.PI) + 1) * 0.5f * maxVolume;
 	}
 	
