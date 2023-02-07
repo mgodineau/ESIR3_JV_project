@@ -9,6 +9,8 @@ public class ProjectileGun : MonoBehaviour
 {
     public GameObject projectile_prefab;
     public Transform gun_end;
+    
+
 
     public TMP_Text ammo_text;
 
@@ -19,7 +21,7 @@ public class ProjectileGun : MonoBehaviour
 
     public float fireRate = 0.1f;
 
-    
+    Animator m_animator;
 
 
     // Start is called before the first frame update
@@ -27,6 +29,7 @@ public class ProjectileGun : MonoBehaviour
     {
         currentbullets = bulletsPerMag;
         UpdateAmmoText();
+        m_animator = GetComponent<Animator>();
     }
 
     // Update is called once per frame
@@ -35,9 +38,12 @@ public class ProjectileGun : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.Mouse0)&& currentbullets>0)
         {
             GameObject projectile = Instantiate(projectile_prefab, gun_end.position, transform.rotation);
+           
             projectile.GetComponent<Rigidbody>().AddForce(gun_end.forward * range);
+           
             currentbullets--;
             //bulletsleft--;
+            m_animator.SetTrigger("Shoot");
             UpdateAmmoText();
             
         }
