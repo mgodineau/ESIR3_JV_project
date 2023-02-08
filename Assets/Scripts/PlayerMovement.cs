@@ -31,7 +31,7 @@ float verticalInput;
 
 Vector3 moveDirection;
 
-Rigidbody rb; 
+Rigidbody rb;
 
 private void Start()
 {
@@ -83,7 +83,6 @@ private void MovePlayer()
 {
 	//calculate movement direction
 	moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
-	//this.transform.rotation = Quaternion.LookRotation(moveDirection);
 
 	//on ground
 	if(grounded)

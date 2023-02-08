@@ -4,6 +4,15 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/StartingMenu.unity
+    guid: c50cf364799d6404591593dcb5ce1d92
+  - enabled: 1
+    path: Assets/Scenes/MerlinTests.unity
+    guid: 178d4ed57fa6d5447bbd1e0b7786acac
+  - enabled: 1
+    path: Assets/Scenes/Mathieu.unity
+    guid: dacd252a5b409b1478324cb6a7f7d4da
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: 9a7ca8dc81fff1b4ebbbb24bed45da8c, type: 2}
