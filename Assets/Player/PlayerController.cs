@@ -28,8 +28,14 @@ public class PlayerController : MonoBehaviour {
 	private float _camAngle = 0;
 	private Vector3 _currentVelocity;
 	public Vector3 CurrentVelocity => _controller.velocity;
-	
-	
+
+	public AudioSource AudioSource;
+
+	public AudioClip footstep;
+	public AudioClip jump;
+
+
+
 	private void Awake() {
 		if (cam == null) {
 			Debug.LogError("attribute \"cam\" of PlayerController is not set");
@@ -68,8 +74,16 @@ public class PlayerController : MonoBehaviour {
 		// rotate camera pitch
 		_camAngle = Mathf.Clamp(_camAngle - _rotationInput.y * mouseSensitivity, camMinAngle, camMaxAngle);
 		cam.localRotation = Quaternion.Euler(_camAngle, 0, 0);
-		
-		
+
+		//Audio manager
+
+		if (_controller.isGrounded && moveSpeed.sqrMagnitude > walkingSpeed - 1)
+		{
+			PlayFootStep(footstep);
+		}
+
+
+
 	}
 	
 	
@@ -87,6 +101,19 @@ public class PlayerController : MonoBehaviour {
 		if ( _controller.isGrounded ) {
 			_currentVelocity.y = jumpSpeed * gravityMultiplier;
 		}
+		AudioSource.volume = 0.5f;
+		AudioSource.PlayOneShot(jump);
 	}
+
+	void PlayFootStep(AudioClip audio)
+    {
+		if (!AudioSource.isPlaying)
+        {
+			AudioSource.pitch = Random.Range(0.8f, 1.2f);
+			AudioSource.volume = Random.Range(0.15f, 0.30f);
+			AudioSource.PlayOneShot(audio);
+        }
+
+    }
 	
 }
