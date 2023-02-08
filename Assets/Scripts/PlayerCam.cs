@@ -12,6 +12,9 @@ public class PlayerCam : MonoBehaviour
     float xRotation;
     float yRotation;
 
+    [Header("Avatar")]
+    public GameObject avatar;
+
     private void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -31,5 +34,8 @@ public class PlayerCam : MonoBehaviour
         //rotate cam and orientation
         transform.rotation = Quaternion.Euler(xRotation, yRotation, 0);
         orientation.rotation = Quaternion.Euler(0, yRotation, 0);
+
+        //rotate player's body
+	    avatar.transform.rotation = orientation.rotation;
     }
 }
