@@ -11,5 +11,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MerlinTests.unity
     guid: 178d4ed57fa6d5447bbd1e0b7786acac
-   m_configObjects:
+  - enabled: 1
+    path: Assets/Scenes/Mathieu.unity
+    guid: dacd252a5b409b1478324cb6a7f7d4da
+  m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: 9a7ca8dc81fff1b4ebbbb24bed45da8c, type: 2}

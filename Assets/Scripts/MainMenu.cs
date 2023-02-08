@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class MainMenu : MonoBehaviour
-{
-   [SerializeField] private AudioClip _clic;
-   [SerializeField] private AudioSource _source;
-
+public class MainMenu : MonoBehaviour {
+	[SerializeField] private string nextSceneName;
+   
     public void PlayGame ()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        SceneManager.LoadScene(nextSceneName);
     }
 
 
