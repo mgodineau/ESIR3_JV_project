@@ -34,7 +34,7 @@ public class VoxImporter : ScriptedImporter
 		Texture2D texture = ConvertPaletteToTexture(file.Palette);
 		texture.name = filename + "_palette";
 
-		Material material = new Material(Shader.Find("Standard") );
+		Material material = new Material(Shader.Find("Universal Render Pipeline/Lit") );
 		material.name = filename + "_mat";
 		material.mainTexture = texture;
 		
