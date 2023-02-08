@@ -43,8 +43,7 @@ public class ShotgunBehaviour : MonoBehaviour {
 		_anim = GetComponent<Animator>();
 		_ammoInMag = Mathf.Min(magCapacity, ammoInReserve);
 
-		_currentAmmoInMagRatio = _ammoInMag;
-		
+		_ammoInMagRatio = (float)_ammoInMag / magCapacity;
 	}
 
 	private void Update() {

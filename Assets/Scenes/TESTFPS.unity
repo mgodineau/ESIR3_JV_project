@@ -233,6 +233,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b54649331dda5543923a25cdaacb713, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  health: 5
 --- !u!4 &83044339 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4490257326247362, guid: 11aaea5348574644a9eb4f4504fcce3f, type: 3}
@@ -557,7 +558,8 @@ MonoBehaviour:
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
+  m_fontSharedMaterials:
+  - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
@@ -778,7 +780,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gun_end: {fileID: 1668175081}
-  damage: 1
 --- !u!114 &1576586612
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -793,6 +794,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   projectile_prefab: {fileID: 4354432243164688928, guid: ea2134f25291be0408cb761694d6d934, type: 3}
   gun_end: {fileID: 1668175081}
+  ammo_text: {fileID: 0}
+  range: 2500
+  bulletsPerMag: 10
+  bulletsleft: 35
+  currentbullets: 0
+  fireRate: 0.1
 --- !u!1 &1668175080
 GameObject:
   m_ObjectHideFlags: 0
