@@ -55,7 +55,7 @@ public class ProjectileGun : MonoBehaviour
             //bulletsleft--;
             m_animator.SetTrigger("Shoot");
             //currentSize = Mathf.Lerp(currentSize, maxSize, Time.deltaTime * 2);
-           //reticle.sizeDelta = new Vector2(10, 10);
+            //reticle.sizeDelta = new Vector2(10, 10);
             UpdateAmmoText();
             
         }
@@ -105,5 +105,5 @@ public class ProjectileGun : MonoBehaviour
         {
             bulletsleft = 0;
         }
-        ammo_text.text = $"{currentbullets}/{bulletsleft}";    }
+        ammo_text.text = $"{currentbullets}/{bulletsleft}";}
 }
