@@ -11,6 +11,8 @@ public class VolumeSaveController : MonoBehaviour
     [SerializeField] private AudioSource _musicSource;
     [SerializeField] private AudioSource _effectSource;
 
+    private float effectVolumeValue = 0.5f;
+    private float musicVolumeValue = 0.5f;
 
     private void Start()
     {
@@ -19,8 +21,8 @@ public class VolumeSaveController : MonoBehaviour
 
     public void SaveVolumeButton()
     {
-        float effectVolumeValue = effectVolumeSlider.value;
-        float musicVolumeValue = musicVolumeSlider.value;
+        effectVolumeValue = effectVolumeSlider.value;
+        musicVolumeValue = musicVolumeSlider.value;
 
         PlayerPrefs.SetFloat("EffectVolume", effectVolumeValue);
         PlayerPrefs.SetFloat("MusicVolume", musicVolumeValue);
@@ -30,8 +32,8 @@ public class VolumeSaveController : MonoBehaviour
 
     void LoadValues()
     {
-        float effectVolumeValue = PlayerPrefs.GetFloat("EffectVolume");
-        float musicVolumeValue = PlayerPrefs.GetFloat("MusicVolume");
+        effectVolumeValue = PlayerPrefs.GetFloat("EffectVolume");
+        musicVolumeValue = PlayerPrefs.GetFloat("MusicVolume");
         effectVolumeSlider.value = effectVolumeValue;
         musicVolumeSlider.value = musicVolumeValue;
 
