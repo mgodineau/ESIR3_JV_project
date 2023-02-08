@@ -7,6 +7,15 @@ using TMPro;
 
 public class ProjectileGun : MonoBehaviour
 {
+    // SCRIPT A METTRE SUR ARME
+
+    /*public RectTransform reticle;
+
+    public float restingSize;
+    public float maxSize;
+    public float speed;
+    private float currentSize;*/
+
     public GameObject projectile_prefab;
     public Transform gun_end;
     
@@ -27,6 +36,7 @@ public class ProjectileGun : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        //reticle = GetComponent<RectTransform>();
         currentbullets = bulletsPerMag;
         UpdateAmmoText();
         m_animator = GetComponent<Animator>();
@@ -44,6 +54,8 @@ public class ProjectileGun : MonoBehaviour
             currentbullets--;
             //bulletsleft--;
             m_animator.SetTrigger("Shoot");
+            //currentSize = Mathf.Lerp(currentSize, maxSize, Time.deltaTime * 2);
+           //reticle.sizeDelta = new Vector2(10, 10);
             UpdateAmmoText();
             
         }
