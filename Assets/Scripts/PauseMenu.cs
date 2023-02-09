@@ -14,6 +14,7 @@ public class PauseMenu : MonoBehaviour
     [Header("Other")]
     public KeyCode pauseKey = KeyCode.Escape;
     [SerializeField] private GameObject thePlayer;
+	[SerializeField] private string menuName;
 
     public void PauseGame()
     {
@@ -40,7 +41,7 @@ public class PauseMenu : MonoBehaviour
     }
     public void QuitGame()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
+        SceneManager.LoadScene(menuName);
     }
 
     void StartGame()
