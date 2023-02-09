@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: cd666628706b2b54d94a178099f51ee7
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: dd89a57d70017789eb2a1426e22ce5c1, type: 3}
+  heightmap: {fileID: 2800000, guid: 016e667b36b100a4fbd79db346cb0730, type: 3}
+  material: {fileID: 2100000, guid: 7f762e56f5b87ff499f195348e080d8f, type: 2}
+  terrainWidth: 200
+  terrainHeight: 100
+  heightOffset: 5
+  voxelSize: 0.5
+  metaVoxelSize: 4
+  addCollider: 1

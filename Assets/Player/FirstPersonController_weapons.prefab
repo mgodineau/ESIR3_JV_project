@@ -142,7 +142,7 @@ PrefabInstance:
     - target: {fileID: 1844218876, guid: ad53b2beb43d6ae4a98ef42961e61df6, type: 3}
       propertyPath: footstep
       value: 
-      objectReference: {fileID: 8300000, guid: 2e4710c1594bf0d4c9293e73138a8b4e, type: 3}
+      objectReference: {fileID: 8300000, guid: ece034c464470ed448cf4c63fda87258, type: 3}
     - target: {fileID: 1844218876, guid: ad53b2beb43d6ae4a98ef42961e61df6, type: 3}
       propertyPath: AudioSource
       value: 
@@ -320,6 +320,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxShotgunShells: 50
   shotgunShells: 50
+  ammoReserveDisplay: {fileID: 0}
+  ammoInClipDisplay: {fileID: 0}
 --- !u!1001 &8067345454881593110
 PrefabInstance:
   m_ObjectHideFlags: 0
