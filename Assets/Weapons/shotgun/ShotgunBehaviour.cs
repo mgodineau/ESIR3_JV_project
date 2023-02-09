@@ -39,6 +39,10 @@ public class ShotgunBehaviour : MonoBehaviour {
 	private bool _readyToShoot = true;
 	private float _ammoInMagRatio = 0.0f;
 	private float _currentAmmoInMagRatio = 0.0f;
+
+	public AudioSource AudioSource;
+	public AudioClip shoot;
+	public AudioClip reload;
 	
 
 	private void Awake() {
@@ -108,8 +112,8 @@ public class ShotgunBehaviour : MonoBehaviour {
 			}
 			
 		}
-		
-		
+
+		AudioSource.PlayOneShot(shoot);
 		_readyToShoot = false;
 	}
 
@@ -123,8 +127,10 @@ public class ShotgunBehaviour : MonoBehaviour {
 		
 		_anim.SetTrigger(Reload);
 		_readyToShoot = false;
+		
+		AudioSource.PlayOneShot(reload);
 
-	}
+		}
 
 }
 }
