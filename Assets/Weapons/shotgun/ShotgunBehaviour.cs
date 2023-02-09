@@ -10,6 +10,8 @@ namespace Weapons {
 public class ShotgunBehaviour : MonoBehaviour {
 
 
+	private PlayerInventory inventory;
+	
 	private Animator _anim;
 	private static readonly int Shoot = Animator.StringToHash("shoot");
 	private static readonly int Reload = Animator.StringToHash("reload");
@@ -41,6 +43,8 @@ public class ShotgunBehaviour : MonoBehaviour {
 
 	private void Awake() {
 		_anim = GetComponent<Animator>();
+		inventory = GetComponentInParent<PlayerInventory>();
+		
 		_ammoInMag = Mathf.Min(magCapacity, ammoInReserve);
 
 		_ammoInMagRatio = (float)_ammoInMag / magCapacity;
@@ -58,7 +62,11 @@ public class ShotgunBehaviour : MonoBehaviour {
 	}
 
 	private void FillMag() {
-		_ammoInMag = magCapacity;
+
+		int transferredShells = Mathf.Min(magCapacity - _ammoInMag, inventory.ShotgunShells);
+		_ammoInMag += transferredShells;
+		inventory.ShotgunShells -= transferredShells;
+		
 		_ammoInMagRatio = (float)_ammoInMag / magCapacity;
 	}
 	
