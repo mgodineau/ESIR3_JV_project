@@ -10,9 +10,9 @@ public class EnemyBehaviour : MonoBehaviour
     //Define objects
     private NavMeshAgent _agent;
 
-    private Transform _player;
-    public LayerMask isPlayer, isWall;
-
+    private Transform _player;	
+    public LayerMask isWall;
+    
     //Stats
     private int health = 100;
     private int dmg = 10;
@@ -47,6 +47,7 @@ public class EnemyBehaviour : MonoBehaviour
 
     private void Update()
     {
+	    playerInAttackRange = Vector3.Distance( _player.transform.position, transform.position ) < sightRange;
 		
 	    //Patroling state
         if (isPatroling)
@@ -66,7 +67,6 @@ public class EnemyBehaviour : MonoBehaviour
         else if (isChasing)
         {
             //Check attack range
-            playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, isPlayer);
             if (playerInAttackRange)
             {
                 isAttacking = true; 
@@ -85,7 +85,6 @@ public class EnemyBehaviour : MonoBehaviour
         else if (isAttacking)
         {
             //Check attack range
-            playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, isPlayer);
             if(!playerInAttackRange)    //out of range
             {
                 isChasing = true;
@@ -101,7 +100,8 @@ public class EnemyBehaviour : MonoBehaviour
 
     private bool InSight()
     {
-        playerInSightRange = Physics.CheckSphere(transform.position, sightRange, isPlayer);
+        // playerInSightRange = Physics.CheckSphere(transform.position, sightRange, isPlayer);
+        playerInSightRange = Vector3.Distance(_player.position, transform.position) < sightRange;
         if (playerInSightRange)
         {
             //check walls
@@ -158,23 +158,26 @@ public class EnemyBehaviour : MonoBehaviour
     {
         //Make sure enemy doesn't move
         _agent.SetDestination(transform.position);
-
-        transform.LookAt(_player);
+        Vector3 targetDir = _player.position - transform.position;
+        targetDir.y = 0;
+        float deltaAngle = Vector3.SignedAngle( transform.forward, targetDir, Vector3.up);
+        transform.Rotate( Vector3.up, deltaAngle / 90 * Time.deltaTime * _agent.angularSpeed );
+        
 
         if (!alreadyAttacked)
         {
             ///Attack code here
-            // Debug.Log("PAF !");
             _player.gameObject.TryGetComponent(out Player_hp playerComponent);
             playerComponent.TakeDammage(dmg);
+            
+            
             ///End of attack code
-
             alreadyAttacked = true;
-            Invoke(nameof(ResetAttack), timeBetweenAttacks);
+            StartCoroutine( ResetAttack(timeBetweenAttacks) );
         }
     }
-    private void ResetAttack()
-    {
+    private IEnumerator ResetAttack(float delay) {
+	    yield return new WaitForSeconds(delay);
         alreadyAttacked = false;
     }
 

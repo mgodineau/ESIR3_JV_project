@@ -1,31 +1,47 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using UnityEngine;
 
 public class ShootableTarget : MonoBehaviour
 {
 
+	public enum DamageType {
+		Standard,
+		Explosion,
+		Petrifaction
+	}
 
+	
+	
+	
     [SerializeField] private float health = 5;//a  modif en fonction de la vie de la cible
     
 	
-    public void TakeDamage(float dmg)
+    public void TakeDamage(float dmg, Vector3 direction, DamageType damageType = DamageType.Standard)
     {
         health -= dmg;
-        // Debug.Log($"Took {dmg} damage, now at {health} health");
         if (health <= 0)
         {
-            //this.gameObject.SetActive(false); // Fais juste disparaitre l'objet mais toujours dans la hierarchie
-            Destroy(this.gameObject); // A voir si destruction en plusieurs morceaux possible ??
+	        KillTarget(direction, damageType);
         }
     }
-    private void OnCollisionEnter(Collision collision)
-    {
-        if(collision.gameObject.GetComponent<Projectile>() !=null)
-        {
-            TakeDamage(collision.gameObject.GetComponent<Projectile>().GetDammage());
-            Destroy(collision.gameObject);
-        }
+
+
+    protected virtual void KillTarget( Vector3 direction, DamageType damageType ) {
+	    Destroy(this.gameObject);
+    }
+    
+    
+    private void OnCollisionEnter(Collision collision) {
+
+	    Projectile projectile = collision.gameObject.GetComponent<Projectile>();
+	    if (projectile == null) {
+		    return;
+	    }
+        TakeDamage(collision.gameObject.GetComponent<Projectile>().GetDammage(), collision.contacts[0].normal );
+        Destroy(collision.gameObject);
+        
         
     }
 }

@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
 
 using UnityEngine.Serialization;
+using Random = UnityEngine.Random;
 
 namespace Weapons {
 
@@ -54,6 +56,11 @@ public class ShotgunBehaviour : MonoBehaviour {
 		_ammoInMagRatio = (float)_ammoInMag / magCapacity;
 	}
 
+	private void OnEnable() {
+		inventory.UpdateAmmoInMag(_ammoInMag);
+	}
+
+
 	private void Update() {
 
 		_currentAmmoInMagRatio = Mathf.MoveTowards(_currentAmmoInMagRatio, _ammoInMagRatio, Time.deltaTime * bagAnimSpeed);
@@ -70,6 +77,7 @@ public class ShotgunBehaviour : MonoBehaviour {
 		int transferredShells = Mathf.Min(magCapacity - _ammoInMag, inventory.ShotgunShells);
 		_ammoInMag += transferredShells;
 		inventory.ShotgunShells -= transferredShells;
+		inventory.UpdateAmmoInMag(_ammoInMag);
 		
 		_ammoInMagRatio = (float)_ammoInMag / magCapacity;
 	}
@@ -81,7 +89,7 @@ public class ShotgunBehaviour : MonoBehaviour {
 			return;
 		}
 		_ammoInMag--;
-		
+		inventory.UpdateAmmoInMag(_ammoInMag);
 		
 		_anim.SetTrigger(Shoot);
 		_ammoInMagRatio = (float)_ammoInMag / magCapacity;
@@ -106,7 +114,7 @@ public class ShotgunBehaviour : MonoBehaviour {
 				
 				ShootableTarget target = hit.transform.GetComponent<ShootableTarget>();
 				if ( target != null ) {
-					target.TakeDamage( totalDamage / raycastCount );
+					target.TakeDamage( totalDamage / raycastCount, rayDir, ShootableTarget.DamageType.Explosion );
 				}
 				
 			}
