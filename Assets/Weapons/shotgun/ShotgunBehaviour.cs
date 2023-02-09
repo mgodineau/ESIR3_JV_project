@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using UI;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -8,10 +9,14 @@ using Random = UnityEngine.Random;
 
 namespace Weapons {
 
+[RequireComponent(typeof(AudioSource))]
 [RequireComponent(typeof(Animator))]
 public class ShotgunBehaviour : MonoBehaviour {
 
 
+	[SerializeField] private Transform head;
+	
+	
 	private PlayerInventory inventory;
 	
 	private Animator _anim;
@@ -25,7 +30,6 @@ public class ShotgunBehaviour : MonoBehaviour {
 	private int _ammoInMag;
 	
 	
-	[SerializeField] private Transform canonEnd;
 	[SerializeField] private ParticleSystem bulletParticles;
 	[SerializeField] private int bulletParticlesCount = 10;
 	[SerializeField] private int raycastCount = 20;
@@ -42,13 +46,14 @@ public class ShotgunBehaviour : MonoBehaviour {
 	private float _ammoInMagRatio = 0.0f;
 	private float _currentAmmoInMagRatio = 0.0f;
 
-	public AudioSource AudioSource;
-	public AudioClip shoot;
-	public AudioClip reload;
+	private AudioSource _audioSource;
+	[SerializeField] private AudioClip shoot;
+	[SerializeField] private AudioClip reload;
 	
 
 	private void Awake() {
 		_anim = GetComponent<Animator>();
+		_audioSource = GetComponent<AudioSource>();
 		inventory = GetComponentInParent<PlayerInventory>();
 		
 		_ammoInMag = Mathf.Min(magCapacity, ammoInReserve);
@@ -57,7 +62,7 @@ public class ShotgunBehaviour : MonoBehaviour {
 	}
 
 	private void OnEnable() {
-		inventory.UpdateAmmoInMag(_ammoInMag);
+		UIManager.UpdateAmmoInMag(_ammoInMag);
 	}
 
 
@@ -77,7 +82,7 @@ public class ShotgunBehaviour : MonoBehaviour {
 		int transferredShells = Mathf.Min(magCapacity - _ammoInMag, inventory.ShotgunShells);
 		_ammoInMag += transferredShells;
 		inventory.ShotgunShells -= transferredShells;
-		inventory.UpdateAmmoInMag(_ammoInMag);
+		UIManager.UpdateAmmoInMag(_ammoInMag);
 		
 		_ammoInMagRatio = (float)_ammoInMag / magCapacity;
 	}
@@ -89,28 +94,48 @@ public class ShotgunBehaviour : MonoBehaviour {
 			return;
 		}
 		_ammoInMag--;
-		inventory.UpdateAmmoInMag(_ammoInMag);
+		UIManager.UpdateAmmoInMag(_ammoInMag);
 		
 		_anim.SetTrigger(Shoot);
 		_ammoInMagRatio = (float)_ammoInMag / magCapacity;
-		
+
+
+
+
+
+
+		// update the particle direction to make them go to the center of the screen
+		Vector3 particleDir = head.forward;
+		{
+			RaycastHit hit;
+			if (Physics.Raycast(head.position, head.forward, out hit)) {
+				Vector3 particleDirTmp = (hit.point - bulletParticles.transform.position).normalized;
+				if ( Vector3.Dot(particleDir, particleDirTmp) > 0 ) {
+					particleDir = particleDirTmp;
+				}
+				
+			}
+		}
+
+		Quaternion particleRotation = Quaternion.FromToRotation(Vector3.forward, particleDir);
+		bulletParticles.transform.rotation = particleRotation;
 		
 		
 		
 		bulletParticles.Emit(bulletParticlesCount);
 		
-
+		
 		for ( int i=0; i<raycastCount; i++ ) {
 			Vector3 rayDir = Vector3.forward;
 			
 			rayDir = Quaternion.Euler(Random.Range(0, spreadAngle), 0, 0) * rayDir;
 			rayDir = Quaternion.Euler(0, 0, Random.Range(0, 360)) * rayDir;
 			
-			rayDir = Quaternion.FromToRotation(Vector3.forward, transform.forward) * rayDir;
+			rayDir = Quaternion.FromToRotation(Vector3.forward, head.forward) * rayDir;
 			
 			
 			RaycastHit hit;
-			if ( Physics.Raycast( canonEnd.position, rayDir, out hit, maxRange ) ) {
+			if ( Physics.Raycast( head.position, rayDir, out hit, maxRange ) ) {
 				
 				ShootableTarget target = hit.transform.GetComponent<ShootableTarget>();
 				if ( target != null ) {
@@ -121,7 +146,7 @@ public class ShotgunBehaviour : MonoBehaviour {
 			
 		}
 
-		AudioSource.PlayOneShot(shoot);
+		_audioSource.PlayOneShot(shoot);
 		_readyToShoot = false;
 	}
 
@@ -136,7 +161,7 @@ public class ShotgunBehaviour : MonoBehaviour {
 		_anim.SetTrigger(Reload);
 		_readyToShoot = false;
 		
-		AudioSource.PlayOneShot(reload);
+		_audioSource.PlayOneShot(reload);
 
 		}
 
