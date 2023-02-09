@@ -13,7 +13,7 @@ public class RandomizeAnimationState : MonoBehaviour
 	
 	private void Awake() {
 		Animation anim = GetComponent<Animation>();
-
+		
 		foreach ( AnimationState state in anim ) {
 			state.speed = Random.Range(minSpeed, maxSpeed);
 			state.time = Random.value * state.clip.length;
