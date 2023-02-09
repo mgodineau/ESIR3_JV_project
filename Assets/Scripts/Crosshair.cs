@@ -6,19 +6,12 @@ using UnityEngine.UI;
 public class Crosshair : MonoBehaviour
 {
 
-    // SCRIPT A METTRE SUR LE RETICULE
-
-
 
     private RectTransform reticle;
-
     public float restingSize;
     public float maxSize;
     public float speed;
     private float currentSize;
-
-
-
 
 
     // Start is called before the first frame update
@@ -27,8 +20,6 @@ public class Crosshair : MonoBehaviour
         reticle = GetComponent<RectTransform>();
 
     }
-
-
 
     void Update()
     {
@@ -42,8 +33,6 @@ public class Crosshair : MonoBehaviour
         }
         reticle.sizeDelta = new Vector2(currentSize, currentSize);
     }
-
-    
 
     bool isMoving
     {

@@ -14,15 +14,6 @@ public class ProjectileBounce : MonoBehaviour
         rb = GetComponent<Rigidbody>();
     }
 
-
-
-
-
-
-
-
-
-    // Update is called once per frame
     void Update()
     {
         lastVelocity = rb.velocity;
