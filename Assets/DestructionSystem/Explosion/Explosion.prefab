@@ -4857,5 +4857,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc824baaa301c62488e37638780f49ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  holeRadius: 5
+  holeRadius: 2
   explosionLifetime: 2
