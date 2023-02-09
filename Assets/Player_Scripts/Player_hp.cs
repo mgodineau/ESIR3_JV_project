@@ -2,24 +2,26 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using UI;
 using UnityEngine;
 
 public class Player_hp : MonoBehaviour
 {
     //Stats
     private int _health;
-	
-    private int Health {
+    
+    public int Health {
 		get => _health;
 		set {
-			_health = Math.Max(0, value);
-			healthDisplay.SetText("" + _health);
+			_health = Math.Clamp(value, 0, maxHealth);
+			UIManager.UpdateHealth(_health);
 		}
 		
     }
 
-    [SerializeField] private TextMeshProUGUI healthDisplay;
     [SerializeField] private int maxHealth = 100;
+    public int MaxHealth => maxHealth;
+    
     public bool isDead = false;
 
     void Start() {

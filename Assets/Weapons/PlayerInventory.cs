@@ -1,4 +1,5 @@
 using TMPro;
+using UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,16 +13,13 @@ public class PlayerInventory : MonoBehaviour {
 	
 	[SerializeField] private int shotgunShells = 50;
 	
-	[SerializeField] private TextMeshProUGUI ammoReserveDisplay;
-	[SerializeField] private TextMeshProUGUI ammoInClipDisplay;
 	
 	
 	public int ShotgunShells {
 		get => shotgunShells;
 		set {
 			shotgunShells = Mathf.Clamp(value, 0, maxShotgunShells);
-
-			ammoReserveDisplay.SetText("" + shotgunShells);
+			UIManager.UpdateAmmoReserve(shotgunShells);
 		}
 	}
 
@@ -32,9 +30,6 @@ public class PlayerInventory : MonoBehaviour {
 	}
 	
 	
-	public void UpdateAmmoInMag( int ammoInMag ) {
-		ammoInClipDisplay.text = "" + ammoInMag;
-	}
 	
 }
 }

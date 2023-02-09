@@ -1,15 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
+using UnityEditorInternal;
 // using System.Numerics;
 using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent))]
+[RequireComponent(typeof(Animator))]
 public class EnemyBehaviour : MonoBehaviour
 {
     //Define objects
     private NavMeshAgent _agent;
-
+    private Animator _anim;
+    private GunBehaviour _gun;
+    
     private Transform _player;	
     public LayerMask isWall;
     
@@ -38,11 +43,15 @@ public class EnemyBehaviour : MonoBehaviour
     public float attackRange = 1;
     bool playerInSightRange = false;
     bool playerInAttackRange = false;
+    private static readonly int AimingTriggerHash = Animator.StringToHash("aiming");
+    private static readonly int ShootTriggerHash = Animator.StringToHash("shoot");
 
     private void Awake()
     {
         _player = GameObject.FindGameObjectWithTag("Player").transform;
         _agent = GetComponent<NavMeshAgent>();
+        _anim = GetComponent<Animator>();
+        _gun = GetComponentInChildren<GunBehaviour>();
     }
 
     private void Update()
@@ -91,6 +100,9 @@ public class EnemyBehaviour : MonoBehaviour
                 isAttacking = false;
             }
         }
+        
+        _anim.SetBool(AimingTriggerHash, isAttacking);
+        
 
         if (isPatroling) Patroling();
         else if (isChasing) ChasePlayer();
@@ -156,6 +168,8 @@ public class EnemyBehaviour : MonoBehaviour
 
     private void AttackPlayer()
     {
+	    
+	    
         //Make sure enemy doesn't move
         _agent.SetDestination(transform.position);
         Vector3 targetDir = _player.position - transform.position;
@@ -167,18 +181,25 @@ public class EnemyBehaviour : MonoBehaviour
         if (!alreadyAttacked)
         {
             ///Attack code here
-            _player.gameObject.TryGetComponent(out Player_hp playerComponent);
-            playerComponent.TakeDammage(dmg);
-            
-            
+			_anim.SetTrigger(ShootTriggerHash);
+
             ///End of attack code
             alreadyAttacked = true;
             StartCoroutine( ResetAttack(timeBetweenAttacks) );
         }
     }
+    
+    
     private IEnumerator ResetAttack(float delay) {
 	    yield return new WaitForSeconds(delay);
         alreadyAttacked = false;
+    }
+
+
+    private void Shoot() {
+	    _player.gameObject.TryGetComponent(out Player_hp playerComponent);
+	    _gun.ShootAt(_player.transform.position);
+	    playerComponent.TakeDammage(dmg);
     }
 
     public void TakeDammage(int dmg)
