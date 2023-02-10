@@ -46,6 +46,7 @@ public class EnemyBehaviour : MonoBehaviour
     private static readonly int AimingTriggerHash = Animator.StringToHash("aiming");
     private static readonly int ShootTriggerHash = Animator.StringToHash("shoot");
 
+
     private void Awake()
     {
         _player = GameObject.FindGameObjectWithTag("Player").transform;
@@ -204,6 +205,7 @@ public class EnemyBehaviour : MonoBehaviour
 
     public void TakeDammage(int dmg)
     {
+        Debug.Log("damage taken");
         health -= dmg;
         if (health <= 0) Invoke(nameof(DestroyEnemy), 0.5f);
     }
