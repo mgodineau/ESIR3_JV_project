@@ -12,7 +12,8 @@ public class ShootableTargetRagdoll : ShootableTarget {
 	private bool alive = true;
 	// private bool deathCollision = false;
 	private DamageType _damageType;
-	
+
+
 	private void Awake() {
 		_ragdoll = GetComponent<RagdollManager>();
 	}
@@ -22,7 +23,8 @@ public class ShootableTargetRagdoll : ShootableTarget {
 		
 		alive = false;
 		_damageType = damageType;
-		
+
+
 		_ragdoll.EnableRagdoll();
 		_ragdoll.MainRigidbody.AddForce( direction*500 + Vector3.up * 500, ForceMode.Impulse );
 

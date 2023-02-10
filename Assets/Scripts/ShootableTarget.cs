@@ -6,7 +6,11 @@ using UnityEngine;
 public class ShootableTarget : MonoBehaviour
 {
 
-	public enum DamageType {
+
+    public AudioSource AudioSource;
+    public AudioClip take_damage;
+
+    public enum DamageType {
 		Standard,
 		Explosion,
 		Petrifaction
@@ -18,8 +22,12 @@ public class ShootableTarget : MonoBehaviour
     [SerializeField] private float health = 5;//a  modif en fonction de la vie de la cible
     
 	
-    public void TakeDamage(float dmg, Vector3 direction, DamageType damageType = DamageType.Standard)
+    public virtual void TakeDamage(float dmg, Vector3 direction, DamageType damageType = DamageType.Standard)
     {
+        if (!AudioSource.isPlaying)
+        {
+            AudioSource.PlayOneShot(take_damage);
+        }
         health -= dmg;
         if (health <= 0)
         {
