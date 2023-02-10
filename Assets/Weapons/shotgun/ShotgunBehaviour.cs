@@ -11,15 +11,10 @@ namespace Weapons {
 
 [RequireComponent(typeof(AudioSource))]
 [RequireComponent(typeof(Animator))]
-public class ShotgunBehaviour : MonoBehaviour {
+public class ShotgunBehaviour : WeaponBehaviour {
 
 
-	[SerializeField] private Transform head;
 	
-	
-	private PlayerInventory inventory;
-	
-	private Animator _anim;
 	private static readonly int Shoot = Animator.StringToHash("shoot");
 	private static readonly int Reload = Animator.StringToHash("reload");
 	
@@ -35,14 +30,13 @@ public class ShotgunBehaviour : MonoBehaviour {
 	[SerializeField] private int raycastCount = 20;
 
 	
-	[SerializeField] private float totalDamage = 1.0f;
 	[SerializeField] private float spreadAngle = 10;
 	[SerializeField] private float maxRange = 50;
 
 
 	[SerializeField] private float bagAnimSpeed = 1.0f;
 	
-	private bool _readyToShoot = true;
+	
 	private float _ammoInMagRatio = 0.0f;
 	private float _currentAmmoInMagRatio = 0.0f;
 
@@ -51,17 +45,16 @@ public class ShotgunBehaviour : MonoBehaviour {
 	[SerializeField] private AudioClip reload;
 	
 
-	private void Awake() {
-		_anim = GetComponent<Animator>();
-		_audioSource = GetComponent<AudioSource>();
-		inventory = GetComponentInParent<PlayerInventory>();
+	private new void Awake() {
+		base.Awake();
 		
+		_audioSource = GetComponent<AudioSource>();
 		_ammoInMag = Mathf.Min(magCapacity, ammoInReserve);
-
 		_ammoInMagRatio = (float)_ammoInMag / magCapacity;
 	}
 
-	private void OnEnable() {
+	private new void OnEnable() {
+		base.OnEnable();
 		UIManager.UpdateAmmoInMag(_ammoInMag);
 	}
 
@@ -69,19 +62,15 @@ public class ShotgunBehaviour : MonoBehaviour {
 	private void Update() {
 
 		_currentAmmoInMagRatio = Mathf.MoveTowards(_currentAmmoInMagRatio, _ammoInMagRatio, Time.deltaTime * bagAnimSpeed);
-		_anim.Play( "AmmoBagEmptying", 1, 1.0f - _currentAmmoInMagRatio );
+		Anim.Play( "AmmoBagEmptying", 1, 1.0f - _currentAmmoInMagRatio );
 	}
-
-
-	private void ReadyToShoot() {
-		_readyToShoot = true;
-	}
+	
 
 	private void FillMag() {
 
-		int transferredShells = Mathf.Min(magCapacity - _ammoInMag, inventory.ShotgunShells);
+		int transferredShells = Mathf.Min(magCapacity - _ammoInMag, Inventory.ShotgunShells);
 		_ammoInMag += transferredShells;
-		inventory.ShotgunShells -= transferredShells;
+		Inventory.ShotgunShells -= transferredShells;
 		UIManager.UpdateAmmoInMag(_ammoInMag);
 		
 		_ammoInMagRatio = (float)_ammoInMag / magCapacity;
@@ -90,13 +79,13 @@ public class ShotgunBehaviour : MonoBehaviour {
 	
 	private void OnFire() {
 
-		if ( _ammoInMag == 0 || !_readyToShoot ) {
+		if ( _ammoInMag == 0 || !IsReadyToShoot ) {
 			return;
 		}
 		_ammoInMag--;
 		UIManager.UpdateAmmoInMag(_ammoInMag);
 		
-		_anim.SetTrigger(Shoot);
+		Anim.SetTrigger(Shoot);
 		_ammoInMagRatio = (float)_ammoInMag / magCapacity;
 
 
@@ -105,10 +94,10 @@ public class ShotgunBehaviour : MonoBehaviour {
 
 
 		// update the particle direction to make them go to the center of the screen
-		Vector3 particleDir = head.forward;
+		Vector3 particleDir = Inventory.Head.forward;
 		{
 			RaycastHit hit;
-			if (Physics.Raycast(head.position, head.forward, out hit)) {
+			if (Physics.Raycast(Inventory.Head.position, Inventory.Head.forward, out hit)) {
 				Vector3 particleDirTmp = (hit.point - bulletParticles.transform.position).normalized;
 				if ( Vector3.Dot(particleDir, particleDirTmp) > 0 ) {
 					particleDir = particleDirTmp;
@@ -131,15 +120,15 @@ public class ShotgunBehaviour : MonoBehaviour {
 			rayDir = Quaternion.Euler(Random.Range(0, spreadAngle), 0, 0) * rayDir;
 			rayDir = Quaternion.Euler(0, 0, Random.Range(0, 360)) * rayDir;
 			
-			rayDir = Quaternion.FromToRotation(Vector3.forward, head.forward) * rayDir;
+			rayDir = Quaternion.FromToRotation(Vector3.forward, Inventory.Head.forward) * rayDir;
 			
 			
 			RaycastHit hit;
-			if ( Physics.Raycast( head.position, rayDir, out hit, maxRange ) ) {
+			if ( Physics.Raycast( Inventory.Head.position, rayDir, out hit, maxRange ) ) {
 				
 				ShootableTarget target = hit.transform.GetComponent<ShootableTarget>();
 				if ( target != null ) {
-					target.TakeDamage( totalDamage / raycastCount, rayDir, ShootableTarget.DamageType.Explosion );
+					target.TakeDamage( damage / raycastCount, rayDir, ShootableTarget.DamageType.Explosion );
 				}
 				
 			}
@@ -147,19 +136,19 @@ public class ShotgunBehaviour : MonoBehaviour {
 		}
 
 		_audioSource.PlayOneShot(shoot);
-		_readyToShoot = false;
+		IsReadyToShoot = false;
 	}
 
 
 	private void OnReload() {
 
-		if ( !_readyToShoot || _ammoInMag == magCapacity ) {
+		if ( !IsReadyToShoot || _ammoInMag == magCapacity || Inventory.ShotgunShells == 0 ) {
 			return;
 		}
 		
 		
-		_anim.SetTrigger(Reload);
-		_readyToShoot = false;
+		Anim.SetTrigger(Reload);
+		IsReadyToShoot = false;
 		
 		_audioSource.PlayOneShot(reload);
 

@@ -58,7 +58,7 @@ public class ShotgunArm : MonoBehaviour {
 	}
 
 	private void OnEnable() {
-		inventory.UpdateAmmoInMag(_ammoInMag);
+		// inventory.UpdateAmmoInMag(_ammoInMag);
 			change = false;
 	}
 
@@ -92,7 +92,7 @@ public class ShotgunArm : MonoBehaviour {
 		int transferredShells = Mathf.Min(magCapacity - _ammoInMag, inventory.ShotgunShells);
 		_ammoInMag += transferredShells;
 		inventory.ShotgunShells -= transferredShells;
-		inventory.UpdateAmmoInMag(_ammoInMag);
+		// inventory.UpdateAmmoInMag(_ammoInMag);
 		
 		_ammoInMagRatio = (float)_ammoInMag / magCapacity;
 	}
@@ -108,7 +108,7 @@ public class ShotgunArm : MonoBehaviour {
 					return;
 				}
 				_ammoInMag--;
-				inventory.UpdateAmmoInMag(_ammoInMag);
+				// inventory.UpdateAmmoInMag(_ammoInMag);
 
 				_anim.SetTrigger(Shoot);
 				_ammoInMagRatio = (float)_ammoInMag / magCapacity;

@@ -1,8 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
-using TMPro;
-using UnityEditorInternal;
-// using System.Numerics;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -19,7 +15,6 @@ public class EnemyBehaviour : MonoBehaviour
     public LayerMask isWall;
     
     //Stats
-    private int health = 100;
     private int dmg = 10;
 
     //States
@@ -200,16 +195,5 @@ public class EnemyBehaviour : MonoBehaviour
 	    _player.gameObject.TryGetComponent(out Player_hp playerComponent);
 	    _gun.ShootAt(_player.transform.position);
 	    playerComponent.TakeDammage(dmg);
-    }
-
-    public void TakeDammage(int dmg)
-    {
-        health -= dmg;
-        if (health <= 0) Invoke(nameof(DestroyEnemy), 0.5f);
-    }
-
-    private void DestroyEnemy()
-    {
-        Destroy(gameObject);
     }
 }

@@ -11,7 +11,7 @@ public class HealthOrbeBehaviour : MonoBehaviour {
 	
 	private void OnTriggerEnter(Collider other) {
 		
-		Player_hp health = other.GetComponent<Player_hp>();
+		Player_hp health = other.GetComponentInChildren<Player_hp>();
 		if ( health == null || health.Health == health.MaxHealth ) {
 			return;
 		}

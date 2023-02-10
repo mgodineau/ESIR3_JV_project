@@ -20,7 +20,6 @@ public class WeaponsHandlerMovements : MonoBehaviour {
 	
 	private void Update() {
 		
-/*		
 		Vector3 currentSpeed = _player.CurrentVelocity;
 
 		Vector3 desiredOffset = transform.InverseTransformVector( -currentSpeed);
@@ -31,7 +30,7 @@ public class WeaponsHandlerMovements : MonoBehaviour {
 
 		_currentOffset = Vector3.Lerp( _currentOffset, desiredOffset, Time.deltaTime * lerpSpeed);
 		
-		transform.localPosition = _centerPosition + _currentOffset; z*/
+		transform.localPosition = _centerPosition + _currentOffset;
 	}
 	
 	

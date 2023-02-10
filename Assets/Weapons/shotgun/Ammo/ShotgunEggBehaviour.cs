@@ -1,27 +1,24 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
-using UnityEditor.SceneManagement;
+
 using UnityEngine;
-using UnityEngine.UIElements;
 using Weapons;
 
-
+[RequireComponent(typeof(Collider))]
 public class ShotgunEggBehaviour : MonoBehaviour {
 
 	[SerializeField] private int ammoCount = 10;
 	
 	
 	private Animation _anim;
-
+	private Collider _collider;
+	
 	private void Awake() {
 		_anim = GetComponent<Animation>();
+		_collider = GetComponent<Collider>();
 	}
 	
 	private void OnTriggerEnter(Collider other) {
 
-		PlayerInventory inventory = other.GetComponent<PlayerInventory>();
+		PlayerInventory inventory = other.GetComponentInChildren<PlayerInventory>();
 		if ( inventory == null || inventory.ShotgunShells == inventory.MaxShotgunShell ) {
 			return;
 		}
@@ -35,6 +32,6 @@ public class ShotgunEggBehaviour : MonoBehaviour {
 		}
 		
 		_anim.enabled = false;
-		enabled = false;
+		_collider.enabled = false;
 	}
 }
